@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ircquotes: Admin Panel</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body bgcolor="#ffffff" text="#000000" link="#c08000" vlink="#c08000" alink="#c08000">
+    <center>
+        <table cellpadding="2" cellspacing="0" width="80%" border="0">
+            <tr>
+                <td bgcolor="#c08000" align="left">
+                    <font size="+1"><b><i>ircquotes</i></b></font>
+                </td>
+                <td bgcolor="#c08000" align="right">
+                    <font face="arial" size="+1"><b>Admin Panel</b></font>
+                </td>
+            </tr>
+        </table>
+        <table cellpadding="2" cellspacing="0" width="80%" border="0">
+            <tr>
+                <td class="footertext" align="left" bgcolor="#f0f0f0"></td>
+                <td align="right" bgcolor="#f0f0f0" class="toplinks" colspan="2">
+                    <a href="/">Home</a> / 
+                    <a href="/random">Random</a> / 
+                    <a href="/submit">Submit</a> / 
+                    <a href="/browse">Browse</a> / 
+                    <a href="/top">Top 100</a> / 
+                    <a href="/modapp">Modapp</a>
+                </td>
+            </tr>
+        </table>
+    </center>
+
+    <center>
+        <table cellpadding="2" cellspacing="0" width="80%">
+            <tr>
+                <td class="bodytext">
+                    <h2>Pending Quotes for Moderation</h2>
+                    {% for quote in pending_quotes %}
+                    <div class="quote">
+                        <p>#{{ quote.id }}: {{ quote.text }}</p>
+                        <p>
+                            <small>
+                                Submitted on {{ quote.date.strftime('%Y-%m-%d') }} | 
+                                <a href="/approve/{{ quote.id }}" class="qa">Approve</a> | 
+                                <a href="/reject/{{ quote.id }}" class="qa">Reject</a> | 
+                                <a href="/delete/{{ quote.id }}" class="qa">Delete</a>
+                            </small>
+                        </p>
+                        <hr>
+                    </div>
+                    {% endfor %}
+                </td>
+            </tr>
+        </table>
+    </center>
+
+    <center>
+        <table border="0" cellpadding="2" cellspacing="0" width="80%" bgcolor="#c08000">
+            <tr>
+                <td bgcolor="#f0f0f0" class="toplinks" colspan="2">
+                    <a href="/">Home</a> / 
+                    <a href="/random">Random</a> / 
+                    <a href="/submit">Submit</a> / 
+                    <a href="/browse">Browse</a> / 
+                </td>
+            </tr>
+            <tr>
+                <td class="footertext" align="left">&nbsp;</td>
+                <td class="footertext" align="right">{{ total_quotes }} quotes approved</td>
+            </tr>
+        </table>
+    </center>
+</body>
+</html>
