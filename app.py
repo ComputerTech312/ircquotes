@@ -8,12 +8,15 @@ import json
 import random
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
-
+from werkzeug.middleware.proxy_fix import ProxyFix  # Import ProxyFix
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///quotes.db'
 app.config['SECRET_KEY'] = 'your_secret_key'  # Use environment variable in production
 db = SQLAlchemy(app)
+
+# Apply ProxyFix middleware
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_port=1, x_prefix=1)
 
 # Initialize Argon2 password hasher
 ph = PasswordHasher()
@@ -25,7 +28,7 @@ ADMIN_CREDENTIALS = {
     'password': '$argon2i$v=19$m=65536,t=4,p=1$cWZDc1pQaUJLTUJoaVI4cw$kn8XKz6AEZi8ebXfyyZuzommSypliVFrsGqzOyUEIHA'  # Example hash
 }
 
-# Define the Quote modelclass Quote(db.Model):
+# Define the Quote model
 class Quote(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     text = db.Column(db.Text, nullable=False)
@@ -36,9 +39,6 @@ class Quote(db.Model):
     user_agent = db.Column(db.String(255))  # Store user-agent strings
     submitted_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
 
-
-
-# Home route to display quotes
 # Home route to display quotes
 @app.route('/')
 def index():
@@ -60,7 +60,7 @@ def submit():
             flash("Quote cannot be empty.", 'error')
             return redirect(url_for('submit'))
 
-        ip_address = request.remote_addr  # Get the user's IP address
+        ip_address = request.headers.get('CF-Connecting-IP', request.remote_addr)  # Get the user's IP address
         user_agent = request.headers.get('User-Agent')  # Get the user's browser info
 
         new_quote = Quote(text=quote_text, ip_address=ip_address, user_agent=user_agent)
@@ -133,7 +133,6 @@ def vote(id, action):
         db.session.rollback()
         flash("Error voting on quote: {}".format(e), 'error')
         return redirect(url_for('browse', page=page))
-
 
 # Route for displaying a random quote
 @app.route('/random')
@@ -246,7 +245,6 @@ def delete_quote(quote_id):
         db.session.delete(quote)
         db.session.commit()
 
-
 @app.route('/search', methods=['GET'])
 def search():
     query = request.args.get('q', '').strip()  # Get the search query and trim whitespace
@@ -291,7 +289,6 @@ def reject(id):
     db.session.commit()
     return redirect(url_for('modapp'))
 
-
 # Delete a quote (admin only)
 @app.route('/delete/<int:id>')
 def delete(id):
@@ -313,7 +310,6 @@ def logout():
 # Automatically create the database tables using app context
 with app.app_context():
     db.create_all()
-
 
 # Initialize rate limiter and CORS for cross-origin API access
 limiter = Limiter(app, key_func=get_remote_address)
@@ -424,4 +420,3 @@ def submit_quote():
 # Run the Flask app
 if __name__ == '__main__':
     app.run(host='127.0.0.1', port=5050, debug=True)
-
