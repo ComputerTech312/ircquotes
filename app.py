@@ -126,18 +126,13 @@ def vote(id, action):
 # Route for displaying a random quote
 @app.route('/random')
 def random_quote():
-    count = Quote.query.count()
+    count = Quote.query.filter_by(status=1).count()  # Only count approved quotes
     if count == 0:
-        flash("No quotes available yet.", 'error')
+        flash("No approved quotes available yet.", 'error')
         return redirect(url_for('index'))
 
-    random_id = random.randint(1, count)
-    random_quote = Quote.query.get(random_id)
-
-    # If the random quote is not found (i.e., deleted), pick another random quote
-    while random_quote is None:
-        random_id = random.randint(1, count)
-        random_quote = Quote.query.get(random_id)
+    random_offset = random.randint(0, count - 1)  # Generate a random offset
+    random_quote = Quote.query.filter_by(status=1).offset(random_offset).first()  # Fetch a random approved quote
 
     return render_template('random.html', quote=random_quote)
 
