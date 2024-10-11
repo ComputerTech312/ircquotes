@@ -81,57 +81,56 @@ def submit():
 
     return render_template('submit.html', approved_count=approved_count, pending_count=pending_count)
 
-# Route to handle voting (upvote/downvote)
 @app.route('/vote/<int:id>/<action>')
 def vote(id, action):
     quote = Quote.query.get_or_404(id)
 
-    # Check if the user has already voted on this quote
+    # Retrieve vote history from the cookie
     vote_cookie = request.cookies.get('votes')
     if vote_cookie:
         vote_data = json.loads(vote_cookie)
     else:
         vote_data = {}
 
-    # If the user has already voted on this quote, check if they're trying to undo the vote
+    # If user already voted, handle undo or switch vote
     if str(id) in vote_data:
         previous_action = vote_data[str(id)]
         
         if previous_action == action:
-            # User is trying to undo their vote
+            # Undo the vote
             if action == 'upvote':
                 quote.votes -= 1
             elif action == 'downvote':
                 quote.votes += 1
-            del vote_data[str(id)]  # Remove the vote from the cookie
+            del vote_data[str(id)]  # Remove vote from record
             flash("Your vote has been undone.", 'success')
         else:
-            # User is switching their vote (upvote to downvote or vice versa)
+            # Switching from upvote to downvote or vice versa
             if action == 'upvote':
-                quote.votes += 2  # Switch from downvote to upvote
+                quote.votes += 2  # From downvote to upvote, effectively +2
             elif action == 'downvote':
-                quote.votes -= 2  # Switch from upvote to downvote
-            vote_data[str(id)] = action  # Update the action in the cookie
+                quote.votes -= 2  # From upvote to downvote, effectively -2
+            vote_data[str(id)] = action  # Update vote action
             flash("Your vote has been changed.", 'success')
     else:
-        # User has not voted on this quote before
+        # First time voting on this quote
         if action == 'upvote':
             quote.votes += 1
         elif action == 'downvote':
             quote.votes -= 1
-        vote_data[str(id)] = action  # Record the vote in the cookie
+        vote_data[str(id)] = action  # Store vote
         flash("Thank you for voting!", 'success')
 
-    # Save the updated vote data in the cookie
+    # Save the updated vote data to the cookie
     try:
         db.session.commit()
-        page = request.args.get('page', 1)  # Get the current page number from query params
+        page = request.args.get('page', 1)
         resp = make_response(redirect(url_for('browse', page=page)))
-        resp.set_cookie('votes', json.dumps(vote_data), max_age=60*60*24*365)  # 1 year expiration
+        resp.set_cookie('votes', json.dumps(vote_data), max_age=60*60*24*365)  # Cookie for 1 year
         return resp
     except Exception as e:
         db.session.rollback()
-        flash("Error voting on quote: {}".format(e), 'error')
+        flash(f"Error voting on quote: {e}", 'error')
         return redirect(url_for('browse', page=page))
 
 # Route for displaying a random quote
