@@ -1,2 +1,5 @@
-flask_sqlalchemy
-argon2-cffi
+Flask==2.3.2
+Flask-SQLAlchemy==3.0.5
+Flask-Limiter==2.4
+Flask-CORS==3.0.10
+argon2-cffi==21.3.0

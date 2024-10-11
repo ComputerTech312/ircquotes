@@ -1,10 +1,14 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, abort, make_response, session
+from flask import Flask, render_template, request, redirect, url_for, flash, abort, make_response, session, jsonify
 from flask_sqlalchemy import SQLAlchemy
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+from flask_cors import CORS
 import datetime
 import json
 import random
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
+
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///quotes.db'
@@ -21,13 +25,18 @@ ADMIN_CREDENTIALS = {
     'password': '$argon2i$v=19$m=65536,t=4,p=1$cWZDc1pQaUJLTUJoaVI4cw$kn8XKz6AEZi8ebXfyyZuzommSypliVFrsGqzOyUEIHA'  # Example hash
 }
 
-# Define the Quote model
+# Define the Quote modelclass Quote(db.Model):
 class Quote(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     text = db.Column(db.Text, nullable=False)
     votes = db.Column(db.Integer, default=0)
     date = db.Column(db.DateTime, default=datetime.datetime.utcnow)
     status = db.Column(db.Integer, default=0)  # 0 = pending, 1 = approved, 2 = rejected
+    ip_address = db.Column(db.String(45))  # Store IPv4 and IPv6 addresses
+    user_agent = db.Column(db.String(255))  # Store user-agent strings
+    submitted_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+
+
 
 # Home route to display quotes
 # Home route to display quotes
@@ -51,7 +60,11 @@ def submit():
             flash("Quote cannot be empty.", 'error')
             return redirect(url_for('submit'))
 
-        new_quote = Quote(text=quote_text)
+        ip_address = request.remote_addr  # Get the user's IP address
+        user_agent = request.headers.get('User-Agent')  # Get the user's browser info
+
+        new_quote = Quote(text=quote_text, ip_address=ip_address, user_agent=user_agent)
+
         try:
             db.session.add(new_quote)
             db.session.commit()
@@ -67,7 +80,6 @@ def submit():
     pending_count = Quote.query.filter_by(status=0).count()
 
     return render_template('submit.html', approved_count=approved_count, pending_count=pending_count)
-
 
 # Route to handle voting (upvote/downvote)
 @app.route('/vote/<int:id>/<action>')
@@ -151,6 +163,10 @@ def quote():
     quote = Quote.query.get_or_404(quote_id)
     return render_template('quote.html', quote=quote)
 
+@app.route('/faq')
+def faq():
+    return render_template('faq.html')
+
 # Admin login route
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -178,11 +194,11 @@ def modapp():
     if not session.get('admin'):
         flash('You need to log in first.', 'danger')
         return redirect(url_for('login'))
-    
-    # Fetch all quotes (pending, approved, and rejected)
-    all_quotes = Quote.query.order_by(Quote.date.desc()).all()
 
-    return render_template('modapp.html', all_quotes=all_quotes)
+    all_quotes = Quote.query.order_by(Quote.date.desc()).all()
+    total_quotes = Quote.query.filter_by(status=1).count()  # Count only approved quotes
+
+    return render_template('modapp.html', all_quotes=all_quotes, total_quotes=total_quotes)
 
 @app.route('/modapp/bulk_action', methods=['POST'])
 def bulk_action():
@@ -297,6 +313,113 @@ def logout():
 # Automatically create the database tables using app context
 with app.app_context():
     db.create_all()
+
+
+# Initialize rate limiter and CORS for cross-origin API access
+limiter = Limiter(app, key_func=get_remote_address)
+CORS(app)
+
+# API to get all approved quotes
+@app.route('/api/quotes', methods=['GET'])
+def get_all_quotes():
+    quotes = Quote.query.filter_by(status=1).all()  # Only approved quotes
+    quote_list = [{
+        'id': quote.id,
+        'text': quote.text,
+        'votes': quote.votes,
+        'date': quote.date.strftime('%Y-%m-%d')
+    } for quote in quotes]
+    
+    return jsonify(quote_list), 200
+
+# API to get a specific quote by ID
+@app.route('/api/quotes/<int:id>', methods=['GET'])
+def get_quote(id):
+    quote = Quote.query.filter_by(id=id, status=1).first_or_404()  # Only approved quotes
+    quote_data = {
+        'id': quote.id,
+        'text': quote.text,
+        'votes': quote.votes,
+        'date': quote.date.strftime('%Y-%m-%d')
+    }
+    return jsonify(quote_data), 200
+
+# API to get a random approved quote
+@app.route('/api/random', methods=['GET'])
+def get_random_quote():
+    count = Quote.query.filter_by(status=1).count()
+    if count == 0:
+        return jsonify({"error": "No approved quotes available"}), 404
+    
+    random_offset = random.randint(0, count - 1)
+    random_quote = Quote.query.filter_by(status=1).offset(random_offset).first()
+    
+    quote_data = {
+        'id': random_quote.id,
+        'text': random_quote.text,
+        'votes': random_quote.votes,
+        'date': random_quote.date.strftime('%Y-%m-%d')
+    }
+    return jsonify(quote_data), 200
+
+# API to get the top quotes by vote count
+@app.route('/api/top', methods=['GET'])
+def get_top_quotes():
+    top_quotes = Quote.query.filter_by(status=1).order_by(Quote.votes.desc()).limit(10).all()  # Limit to top 10
+    quote_list = [{
+        'id': quote.id,
+        'text': quote.text,
+        'votes': quote.votes,
+        'date': quote.date.strftime('%Y-%m-%d')
+    } for quote in top_quotes]
+    
+    return jsonify(quote_list), 200
+
+# API to search for quotes
+@app.route('/api/search', methods=['GET'])
+def search_quotes():
+    query = request.args.get('q', '').strip()
+    if not query:
+        return jsonify({"error": "No search term provided"}), 400
+    
+    quotes = Quote.query.filter(Quote.text.ilike(f'%{query}%'), Quote.status == 1).all()  # Search in approved quotes
+    if not quotes:
+        return jsonify({"error": "No quotes found for search term"}), 404
+
+    quote_list = [{
+        'id': quote.id,
+        'text': quote.text,
+        'votes': quote.votes,
+        'date': quote.date.strftime('%Y-%m-%d')
+    } for quote in quotes]
+    
+    return jsonify(quote_list), 200
+
+# API to submit a new quote
+@app.route('/api/submit', methods=['POST'])
+@limiter.limit("5 per minute")  # Rate limiting to prevent abuse
+def submit_quote():
+    data = request.get_json()
+
+    # Validate the input
+    if not data or not data.get('text'):
+        return jsonify({"error": "Quote text is required"}), 400
+    
+    quote_text = data.get('text').strip()
+
+    # Basic validation to prevent spam
+    if len(quote_text) < 5 or len(quote_text) > 1000:
+        return jsonify({"error": "Quote must be between 5 and 1000 characters"}), 400
+    
+    new_quote = Quote(text=quote_text)
+
+    try:
+        db.session.add(new_quote)
+        db.session.commit()
+        return jsonify({"success": "Quote submitted successfully!", "id": new_quote.id}), 201
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": f"Error submitting quote: {str(e)}"}), 500
 
 # Run the Flask app
 if __name__ == '__main__':

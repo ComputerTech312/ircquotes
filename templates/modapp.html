@@ -40,22 +40,26 @@
             <tr>
                 <td class="bodytext">
                     <h2>All Quotes for Moderation</h2>
-
+    
                     <!-- Check if there are any quotes -->
                     {% if all_quotes %}
                     <form method="POST" action="/modapp/bulk_action">
-                        <table>
+                        <table border="1" cellpadding="5" cellspacing="0" width="100%">
                             <tr>
                                 <th>Select</th>
                                 <th>Quote ID</th>
                                 <th>Quote</th>
                                 <th>Status</th>
+                                <th>Submitted At</th>
+                                <th>IP Address</th>
+                                <th>User Agent</th>
                                 <th>Actions</th>
                             </tr>
                             <!-- Loop through each quote -->
                             {% for quote in all_quotes %}
-                            <tr style="background-color: '{% if quote.status == 1 %}#d4edda{% elif quote.status == 2 %}#f8d7da{% else %}#fff{% endif %}'">
-                                <td><input type="checkbox" name="quote_ids" value="{{ quote.id }}"></td>
+                            <tr style="background-color: 
+                                {% if quote.status == 1 %} #d4edda {% elif quote.status == 2 %} #f8d7da {% else %} #fff {% endif %}">
+                                <td><input type="checkbox" name="quote_ids[]" value="{{ quote.id }}"></td>
                                 <td>#{{ quote.id }}</td>
                                 <td>{{ quote.text }}</td>
                                 <td>
@@ -67,6 +71,15 @@
                                         Rejected
                                     {% endif %}
                                 </td>
+                                <td>
+                                    {% if quote.submitted_at %}
+                                        {{ quote.submitted_at.strftime('%Y-%m-%d %H:%M:%S') }}
+                                    {% else %}
+                                        N/A
+                                    {% endif %}
+                                </td>
+                                <td>{{ quote.ip_address }}</td>
+                                <td>{{ quote.user_agent }}</td>
                                 <td>
                                     <a href="/approve/{{ quote.id }}">Approve</a> | 
                                     <a href="/reject/{{ quote.id }}">Reject</a> | 
@@ -109,5 +122,11 @@
             </tr>
         </table>
     </center>
+
+    <!-- Dark Mode Toggle -->
+    <center>
+        <button id="theme-toggle">Toggle Dark Mode</button>
+    </center>
+
 </body>
 </html>
