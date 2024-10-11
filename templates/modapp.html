@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="/static/css/styles.css">
 </head>
 <body bgcolor="#ffffff" text="#000000" link="#c08000" vlink="#c08000" alink="#c08000">
+    <!-- Navigation -->
     <center>
         <table cellpadding="2" cellspacing="0" width="80%" border="0">
             <tr>
@@ -33,30 +34,65 @@
         </table>
     </center>
 
+    <!-- Main Content: All Quotes for Moderation -->
     <center>
         <table cellpadding="2" cellspacing="0" width="80%">
             <tr>
                 <td class="bodytext">
-                    <h2>Pending Quotes for Moderation</h2>
-                    {% for quote in pending_quotes %}
-                    <div class="quote">
-                        <p>#{{ quote.id }}: {{ quote.text }}</p>
-                        <p>
-                            <small>
-                                Submitted on {{ quote.date.strftime('%Y-%m-%d') }} | 
-                                <a href="/approve/{{ quote.id }}" class="qa">Approve</a> | 
-                                <a href="/reject/{{ quote.id }}" class="qa">Reject</a> | 
-                                <a href="/delete/{{ quote.id }}" class="qa">Delete</a>
-                            </small>
-                        </p>
-                        <hr>
-                    </div>
-                    {% endfor %}
+                    <h2>All Quotes for Moderation</h2>
+
+                    <!-- Check if there are any quotes -->
+                    {% if all_quotes %}
+                    <form method="POST" action="/modapp/bulk_action">
+                        <table>
+                            <tr>
+                                <th>Select</th>
+                                <th>Quote ID</th>
+                                <th>Quote</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                            <!-- Loop through each quote -->
+                            {% for quote in all_quotes %}
+                            <tr style="background-color: '{% if quote.status == 1 %}#d4edda{% elif quote.status == 2 %}#f8d7da{% else %}#fff{% endif %}'">
+                                <td><input type="checkbox" name="quote_ids" value="{{ quote.id }}"></td>
+                                <td>#{{ quote.id }}</td>
+                                <td>{{ quote.text }}</td>
+                                <td>
+                                    {% if quote.status == 0 %}
+                                        Pending
+                                    {% elif quote.status == 1 %}
+                                        Approved
+                                    {% else %}
+                                        Rejected
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="/approve/{{ quote.id }}">Approve</a> | 
+                                    <a href="/reject/{{ quote.id }}">Reject</a> | 
+                                    <a href="/delete/{{ quote.id }}">Delete</a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </table>
+                        
+                        <!-- Bulk Action Dropdown and Submit -->
+                        <select name="action">
+                            <option value="approve">Approve Selected</option>
+                            <option value="reject">Reject Selected</option>
+                            <option value="delete">Delete Selected</option>
+                        </select>
+                        <input type="submit" value="Apply">
+                    </form>
+                    {% else %}
+                    <p>No quotes available for moderation at the moment.</p>
+                    {% endif %}
                 </td>
             </tr>
         </table>
     </center>
 
+    <!-- Footer -->
     <center>
         <table border="0" cellpadding="2" cellspacing="0" width="80%" bgcolor="#c08000">
             <tr>

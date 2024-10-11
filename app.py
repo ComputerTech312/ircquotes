@@ -136,9 +136,9 @@ def random_quote():
 
     return render_template('random.html', quote=random_quote)
 
-@app.route('/?<int:id>')
-def quote_homepathid(quote_id):
-    quote = Quote.query.get_or_404(quote_id)
+@app.route('/<int:id>')
+def quote_homepathid(id):
+    quote = Quote.query.get_or_404(id)
     return render_template('quote.html', quote=quote)
 
 @app.route('/quote')
@@ -175,12 +175,61 @@ def login():
 # Admin panel route (accessible only to logged-in admins)
 @app.route('/modapp')
 def modapp():
-    if not session.get('admin'):  # If admin not logged in, redirect to login
+    if not session.get('admin'):
         flash('You need to log in first.', 'danger')
         return redirect(url_for('login'))
     
-    pending_quotes = Quote.query.filter_by(status=0).all()
-    return render_template('modapp.html', pending_quotes=pending_quotes)
+    # Fetch all quotes (pending, approved, and rejected)
+    all_quotes = Quote.query.order_by(Quote.date.desc()).all()
+
+    return render_template('modapp.html', all_quotes=all_quotes)
+
+@app.route('/modapp/bulk_action', methods=['POST'])
+def bulk_action():
+    action = request.form.get('action')
+    quote_ids = request.form.getlist('quote_ids')
+
+    if not quote_ids:
+        flash("No quotes selected.", "warning")
+        return redirect(url_for('modapp'))
+
+    valid_actions = ['approve', 'reject', 'delete']
+    if action not in valid_actions:
+        flash("Invalid action selected.", "error")
+        return redirect(url_for('modapp'))
+
+    if action == 'approve':
+        for quote_id in quote_ids:
+            approve_quote(quote_id)
+    elif action == 'reject':
+        for quote_id in quote_ids:
+            reject_quote(quote_id)
+    elif action == 'delete':
+        for quote_id in quote_ids:
+            delete_quote(quote_id)
+
+    flash(f"Bulk action '{action}' applied to selected quotes.", "success")
+    return redirect(url_for('modapp'))
+
+# Define helper functions for each action
+def approve_quote(quote_id):
+    quote = Quote.query.get(quote_id)
+    if quote:
+        quote.status = 1  # Approved
+        db.session.commit()
+
+def reject_quote(quote_id):
+    quote = Quote.query.get(quote_id)
+    if quote:
+        quote.status = 2  # Rejected
+        db.session.commit()
+
+def delete_quote(quote_id):
+    quote = Quote.query.get(quote_id)
+    if quote:
+        db.session.delete(quote)
+        db.session.commit()
+
 
 @app.route('/search', methods=['GET'])
 def search():
@@ -208,9 +257,12 @@ def approve(id):
         return redirect(url_for('login'))
 
     quote = Quote.query.get_or_404(id)
-    quote.status = 1  # 1 = approved
+    quote.status = 1
     db.session.commit()
-    return redirect(url_for('modapp'))
+
+    # Redirect back to the same page
+    page = request.args.get('page', 1)
+    return redirect(url_for('modapp', page=page))
 
 # Reject a quote (admin only)
 @app.route('/reject/<int:id>')
@@ -222,6 +274,7 @@ def reject(id):
     quote.status = 2  # 2 = rejected
     db.session.commit()
     return redirect(url_for('modapp'))
+
 
 # Delete a quote (admin only)
 @app.route('/delete/<int:id>')
