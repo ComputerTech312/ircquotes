@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ircquotes: Search</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body bgcolor="#ffffff" text="#000000" link="#c08000" vlink="#c08000" alink="#c08000">
+
+    <!-- Top Navigation Bar -->
+    <center>
+        <table cellpadding="2" cellspacing="0" width="80%" border="0">
+            <tr>
+                <td bgcolor="#c08000" align="left">
+                    <font size="+1"><b><i>ircquotes</i></b></font>
+                </td>
+                <td bgcolor="#c08000" align="right">
+                    <font face="arial" size="+1"><b>Search Quotes</b></font>
+                </td>
+            </tr>
+        </table>
+
+        <!-- Navigation Links -->
+        <table cellpadding="2" cellspacing="0" width="80%" border="0">
+            <tr>
+                <td class="footertext" align="left" bgcolor="#f0f0f0"></td>
+                <td align="right" bgcolor="#f0f0f0" class="toplinks" colspan="2">
+                    <a href="/">Home</a> /
+                    <a href="/random">Random</a> /
+                    <a href="/submit">Submit</a> /
+                    <a href="/browse">Browse</a> /
+                    <a href="/modapp">ModApp</a> /
+                    <a href="/search">Search</a>
+                </td>
+            </tr>
+        </table>
+    </center>
+
+    <!-- Search Form -->
+    <center>
+        <h2>Search for Quotes</h2>
+        <form action="/search" method="GET">
+            <input type="text" name="q" class="text" placeholder="Enter search term" required>
+            <input type="submit" value="Search" class="button">
+        </form>
+
+        <!-- Show Search Results only if there is a search query -->
+        {% if query %}
+            <h3>Search Results for "{{ query }}"</h3>
+
+            {% if quotes %}
+                <table cellpadding="0" cellspacing="3" width="80%">
+                    <tr>
+                        <td class="bodytext" width="100%" valign="top">
+                            {% for quote in quotes %}
+                                <p class="quote">
+                                    <a href="/quote?id={{ quote.id }}" title="Permanent link to this quote.">
+                                        <b>#{{ quote.id }}</b>
+                                    </a>
+                                    <a href="/vote/{{ quote.id }}/upvote" class="qa">+</a>
+                                    (<font color="green">{{ quote.votes }}</font>)
+                                    <a href="/vote/{{ quote.id }}/downvote" class="qa">-</a>
+                                </p>
+                                <p class="qt">{{ quote.text }}</p>
+                                <hr>
+                            {% endfor %}
+                        </td>
+                    </tr>
+                </table>
+            {% else %}
+                <h4>No quotes found for "{{ query }}".</h4>
+            {% endif %}
+        {% endif %}
+    </center>
+
+    <!-- Footer -->
+    <center>
+        <table border="0" cellpadding="2" cellspacing="0" width="80%" bgcolor="#c08000">
+            <tr>
+                <td bgcolor="#f0f0f0" class="toplinks" colspan="2">
+                    <a href="/">Home</a> /
+                    <a href="/random">Random</a> /
+                    <a href="/submit">Submit</a> /
+                    <a href="/browse">Browse</a> /
+                </td>
+            </tr>
+            <tr>
+                <td class="footertext" align="left">&nbsp;</td>
+                <td class="footertext" align="right">{{ approved_count }} quotes approved</td>
+            </tr>
+        </table>
+
+        <font size="-1">&#169; ircquotes 2024, All Rights Reserved.</font>
+    </center>
+
+</body>
+</html>

@@ -182,6 +182,18 @@ def modapp():
     pending_quotes = Quote.query.filter_by(status=0).all()
     return render_template('modapp.html', pending_quotes=pending_quotes)
 
+@app.route('/search', methods=['GET'])
+def search():
+    query = request.args.get('q', '').strip()  # Get the search query and trim whitespace
+    quotes = []
+
+    if query:
+        # Perform the search only if the query is provided
+        quotes = Quote.query.filter(Quote.text.like(f'%{query}%'), Quote.status == 1).all()
+
+    # Render the search page with the results (or empty if no query)
+    return render_template('search.html', quotes=quotes, query=query)
+
 # Route for browsing approved quotes
 @app.route('/browse', methods=['GET'])
 def browse():
