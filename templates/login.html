@@ -3,10 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Login</title>
+    <title>ircquotes: Admin Login</title>
     <link rel="stylesheet" href="/static/css/styles.css">
 </head>
-<body>
+<body bgcolor="#ffffff" text="#000000" link="#c08000" vlink="#c08000" alink="#c08000">
+
+    <!-- Top Navigation Bar -->
+    <center>
+        <table cellpadding="2" cellspacing="0" width="80%" border="0">
+            <tr>
+                <td bgcolor="#c08000" align="left">
+                    <font size="+1"><b><i>ircquotes</i></b></font>
+                </td>
+                <td bgcolor="#c08000" align="right">
+                    <font face="arial" size="+1"><b>Admin Login</b></font>
+                </td>
+            </tr>
+        </table>
+
+        <!-- Navigation Links -->
+        <table cellpadding="2" cellspacing="0" width="80%" border="0">
+            <tr>
+                <td class="footertext" align="left" bgcolor="#f0f0f0"></td>
+                <td align="right" bgcolor="#f0f0f0" class="toplinks" colspan="2">
+                    <a href="/">Home</a> /
+                    <a href="/random">Random</a> /
+                    <a href="/submit">Submit</a> /
+                    <a href="/browse">Browse</a> /
+                    <a href="/modapp">ModApp</a> /
+                    <a href="/search">Search</a>
+                </td>
+            </tr>
+        </table>
+    </center>
+
+    <!-- Login Form -->
     <center>
         <h2>Admin Login</h2>
         <form method="POST" action="/login">
@@ -27,5 +58,26 @@
             </table>
         </form>
     </center>
+
+    <!-- Footer -->
+    <center>
+        <table border="0" cellpadding="2" cellspacing="0" width="80%" bgcolor="#c08000">
+            <tr>
+                <td bgcolor="#f0f0f0" class="toplinks" colspan="2">
+                    <a href="/">Home</a> /
+                    <a href="/random">Random</a> /
+                    <a href="/submit">Submit</a> /
+                    <a href="/browse">Browse</a> /
+                </td>
+            </tr>
+            <tr>
+                <td class="footertext" align="left">&nbsp;</td>
+                <td class="footertext" align="right">{{ approved_count }} quotes approved</td>
+            </tr>
+        </table>
+
+        <font size="-1">&#169; ircquotes 2024, All Rights Reserved.</font>
+    </center>
+
 </body>
 </html>
