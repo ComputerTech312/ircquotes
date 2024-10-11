@@ -141,6 +141,11 @@ def random_quote():
 
     return render_template('random.html', quote=random_quote)
 
+@app.route('/?<int:id>')
+def quote_homepathid(quote_id):
+    quote = Quote.query.get_or_404(quote_id)
+    return render_template('quote.html', quote=quote)
+
 @app.route('/quote')
 def quote():
     quote_id = request.args.get('id')
