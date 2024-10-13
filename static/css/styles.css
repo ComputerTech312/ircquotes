@@ -8,37 +8,6 @@ body {
     transition: background-color 0.3s, color 0.3s;
 }
 
-/* Dark Mode */
-@media (prefers-color-scheme: dark) {
-    body {
-        background-color: #121212;
-        color: #ffffff;
-    }
-    
-    a {
-        color: #ffa500;
-    }
-
-    table, td, input.text, textarea, select {
-        background-color: #1e1e1e;
-        color: #ffffff;
-        border-color: #ffa500;
-    }
-
-    input.button {
-        background-color: #ffa500;
-        color: #000000;
-    }
-
-    input.button:hover {
-        background-color: #ff8c00;
-    }
-
-    .footertext, .toplinks, h2 {
-        color: #ffa500;
-    }
-}
-
 /* Links */
 a {
     color: #c08000;
@@ -77,7 +46,7 @@ h2 {
 .smalltext {
     font-size: 10px;
     background-color: #f0f0f0;
-    color: #000000;
+    color: #ffffff;
 }
 
 .bodytext {
@@ -204,8 +173,42 @@ footer {
     text-decoration: underline;
 }
 
-/* Dark Mode Specific */
+/* Dark Mode */
 @media (prefers-color-scheme: dark) {
+    body {
+        background-color: #121212;
+        color: #ffffff;
+    }
+    
+    a {
+        color: #ffa500;
+    }
+
+    .bodytext {
+        line-height: 21px;
+        font-size: smaller;
+        color: #ffffff;
+    }
+
+    table, td, input.text, textarea, select {
+        background-color: #01002c11;
+        color: #ffffff;
+        border-color: #ffa500;
+    }
+
+    input.button {
+        background-color: #ffa500;
+        color: #00000000;
+    }
+
+    input.button:hover {
+        background-color: #ff8c00;
+    }
+
+    .footertext, .toplinks, h2 {
+        color: #ffa500;
+    }
+
     td.quote-box {
         border-color: #ffa500;
     }
