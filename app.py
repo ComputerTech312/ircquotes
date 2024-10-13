@@ -9,6 +9,7 @@ import random
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
 from werkzeug.middleware.proxy_fix import ProxyFix  # Import ProxyFix
+import logging
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///quotes.db'
@@ -20,6 +21,9 @@ app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_port=1, x_
 
 # Initialize Argon2 password hasher
 ph = PasswordHasher()
+
+# Initialize logging for debugging
+logging.basicConfig(level=logging.DEBUG)
 
 # Hardcoded admin credentials (hashed password using Argon2)
 ADMIN_CREDENTIALS = {
@@ -92,7 +96,7 @@ def vote(id, action):
     else:
         vote_data = {}
 
-    # If user already voted, handle undo or switch vote
+    # If the user has already voted, check for undoing or switching vote
     if str(id) in vote_data:
         previous_action = vote_data[str(id)]
         
@@ -113,12 +117,12 @@ def vote(id, action):
             vote_data[str(id)] = action  # Update vote action
             flash("Your vote has been changed.", 'success')
     else:
-        # First time voting on this quote
+        # First-time voting on this quote (starting from neutral)
         if action == 'upvote':
-            quote.votes += 1
+            quote.votes += 1  # Add +1 vote
         elif action == 'downvote':
-            quote.votes -= 1
-        vote_data[str(id)] = action  # Store vote
+            quote.votes -= 1  # Subtract -1 vote
+        vote_data[str(id)] = action  # Store vote action
         flash("Thank you for voting!", 'success')
 
     # Save the updated vote data to the cookie
@@ -136,15 +140,19 @@ def vote(id, action):
 # Route for displaying a random quote
 @app.route('/random')
 def random_quote():
-    count = Quote.query.filter_by(status=1).count()  # Only count approved quotes
+    approved_count = Quote.query.filter_by(status=1).count()
+    pending_count = Quote.query.filter_by(status=0).count()
+    count = Quote.query.count()
+
     if count == 0:
-        flash("No approved quotes available yet.", 'error')
+        flash("No quotes available yet.", 'error')
         return redirect(url_for('index'))
 
-    random_offset = random.randint(0, count - 1)  # Generate a random offset
-    random_quote = Quote.query.filter_by(status=1).offset(random_offset).first()  # Fetch a random approved quote
+    random_id = random.randint(1, count)
+    random_quote = Quote.query.get(random_id)
 
-    return render_template('random.html', quote=random_quote)
+    return render_template('random.html', quote=random_quote, approved_count=approved_count, pending_count=pending_count)
+
 
 @app.route('/<int:id>')
 def quote_homepathid(id):
@@ -193,54 +201,47 @@ def modapp():
         flash('You need to log in first.', 'danger')
         return redirect(url_for('login'))
 
-    all_quotes = Quote.query.order_by(Quote.date.desc()).all()
-    total_quotes = Quote.query.filter_by(status=1).count()  # Count only approved quotes
+    # Apply filtering (pending, approved, rejected)
+    filter_status = request.args.get('filter', 'pending')
+    page = request.args.get('page', 1, type=int)
 
-    return render_template('modapp.html', all_quotes=all_quotes, total_quotes=total_quotes)
+    if filter_status == 'approved':
+        quotes = Quote.query.filter_by(status=1).order_by(Quote.date.desc()).paginate(page=page, per_page=10)
+    elif filter_status == 'rejected':
+        quotes = Quote.query.filter_by(status=2).order_by(Quote.date.desc()).paginate(page=page, per_page=10)
+    else:  # Default to pending
+        quotes = Quote.query.filter_by(status=0).order_by(Quote.date.desc()).paginate(page=page, per_page=10)
 
-@app.route('/modapp/bulk_action', methods=['POST'])
-def bulk_action():
-    action = request.form.get('action')
-    quote_ids = request.form.getlist('quote_ids')
+    # Get counts for each status
+    approved_count = Quote.query.filter_by(status=1).count()
+    pending_count = Quote.query.filter_by(status=0).count()
+    rejected_count = Quote.query.filter_by(status=2).count()
 
-    if not quote_ids:
-        flash("No quotes selected.", "warning")
-        return redirect(url_for('modapp'))
+    return render_template('modapp.html', quotes=quotes, filter_status=filter_status,
+                           approved_count=approved_count, pending_count=pending_count,
+                           rejected_count=rejected_count)
 
-    valid_actions = ['approve', 'reject', 'delete']
-    if action not in valid_actions:
-        flash("Invalid action selected.", "error")
-        return redirect(url_for('modapp'))
 
-    if action == 'approve':
-        for quote_id in quote_ids:
-            approve_quote(quote_id)
-    elif action == 'reject':
-        for quote_id in quote_ids:
-            reject_quote(quote_id)
-    elif action == 'delete':
-        for quote_id in quote_ids:
-            delete_quote(quote_id)
-
-    flash(f"Bulk action '{action}' applied to selected quotes.", "success")
-    return redirect(url_for('modapp'))
-
-# Define helper functions for each action
+# Helper function to approve a quote
 def approve_quote(quote_id):
     quote = Quote.query.get(quote_id)
-    if quote:
+    if quote and quote.status != 1:  # Only approve if not already approved
         quote.status = 1  # Approved
         db.session.commit()
 
+# Helper function to reject a quote
 def reject_quote(quote_id):
     quote = Quote.query.get(quote_id)
-    if quote:
+    if quote and quote.status != 2:  # Only reject if not already rejected
+        logging.debug(f"Rejecting quote ID: {quote.id}")  # Add logging for rejection
         quote.status = 2  # Rejected
         db.session.commit()
 
+# Helper function to delete a quote
 def delete_quote(quote_id):
     quote = Quote.query.get(quote_id)
     if quote:
+        logging.debug(f"Deleting quote ID: {quote.id}")  # Add logging for deletion
         db.session.delete(quote)
         db.session.commit()
 
@@ -249,19 +250,31 @@ def search():
     query = request.args.get('q', '').strip()  # Get the search query and trim whitespace
     quotes = []
 
+    # Query the counts of approved and pending quotes
+    approved_count = Quote.query.filter_by(status=1).count()
+    pending_count = Quote.query.filter_by(status=0).count()
+
     if query:
         # Perform the search only if the query is provided
         quotes = Quote.query.filter(Quote.text.like(f'%{query}%'), Quote.status == 1).all()
 
-    # Render the search page with the results (or empty if no query)
-    return render_template('search.html', quotes=quotes, query=query)
+    # Render the search page with the results, counts, and search query
+    return render_template('search.html', quotes=quotes, query=query, approved_count=approved_count, pending_count=pending_count)
 
 # Route for browsing approved quotes
 @app.route('/browse', methods=['GET'])
 def browse():
+    # Query the counts of approved and pending quotes
+    approved_count = Quote.query.filter_by(status=1).count()
+    pending_count = Quote.query.filter_by(status=0).count()
+
+    # Pagination setup
     page = request.args.get('page', 1, type=int)
     quotes = Quote.query.filter_by(status=1).order_by(Quote.date.desc()).paginate(page=page, per_page=10)
-    return render_template('browse.html', quotes=quotes)
+
+    # Pass the counts and the quotes to the template
+    return render_template('browse.html', quotes=quotes, approved_count=approved_count, pending_count=pending_count)
+
 
 # Approve a quote (admin only)
 @app.route('/approve/<int:id>')
