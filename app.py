@@ -96,45 +96,47 @@ def vote(id, action):
     else:
         vote_data = {}
 
-    # If the user has already voted, check for undoing or switching vote
-    if str(id) in vote_data:
+    # If no prior vote, apply the new vote
+    if str(id) not in vote_data:
+        if action == 'upvote':
+            quote.votes += 1
+            vote_data[str(id)] = 'upvote'
+        elif action == 'downvote':
+            quote.votes -= 1
+            vote_data[str(id)] = 'downvote'
+        flash("Thank you for voting!", 'success')
+    
+    else:
         previous_action = vote_data[str(id)]
-        
+
         if previous_action == action:
-            # Undo the vote
+            # If the user clicks the same action again, undo the vote
             if action == 'upvote':
                 quote.votes -= 1
             elif action == 'downvote':
                 quote.votes += 1
-            del vote_data[str(id)]  # Remove vote from record
+            del vote_data[str(id)]  # Remove the vote record (undo)
             flash("Your vote has been undone.", 'success')
         else:
-            # Switching from upvote to downvote or vice versa
-            if action == 'upvote':
-                quote.votes += 2  # From downvote to upvote, effectively +2
-            elif action == 'downvote':
-                quote.votes -= 2  # From upvote to downvote, effectively -2
-            vote_data[str(id)] = action  # Update vote action
+            # If the user switches votes (upvote -> downvote or vice versa)
+            if previous_action == 'upvote' and action == 'downvote':
+                quote.votes -= 2  # Undo upvote (+1) and apply downvote (-1)
+                vote_data[str(id)] = 'downvote'
+            elif previous_action == 'downvote' and action == 'upvote':
+                quote.votes += 2  # Undo downvote (-1) and apply upvote (+1)
+                vote_data[str(id)] = 'upvote'
             flash("Your vote has been changed.", 'success')
-    else:
-        # First-time voting on this quote (starting from neutral)
-        if action == 'upvote':
-            quote.votes += 1  # Add +1 vote
-        elif action == 'downvote':
-            quote.votes -= 1  # Subtract -1 vote
-        vote_data[str(id)] = action  # Store vote action
-        flash("Thank you for voting!", 'success')
 
     # Save the updated vote data to the cookie
     try:
         db.session.commit()
         page = request.args.get('page', 1)
         resp = make_response(redirect(url_for('browse', page=page)))
-        resp.set_cookie('votes', json.dumps(vote_data), max_age=60*60*24*365)  # Cookie for 1 year
+        resp.set_cookie('votes', json.dumps(vote_data), max_age=60*60*24*365)  # Store vote history in cookies for 1 year
         return resp
     except Exception as e:
         db.session.rollback()
-        flash(f"Error voting on quote: {e}", 'error')
+        flash(f"Error while voting: {e}", 'error')
         return redirect(url_for('browse', page=page))
 
 # Route for displaying a random quote
@@ -247,19 +249,35 @@ def delete_quote(quote_id):
 
 @app.route('/search', methods=['GET'])
 def search():
-    query = request.args.get('q', '').strip()  # Get the search query and trim whitespace
+    query = request.args.get('q', '').strip()  # Get the search query
     quotes = []
 
-    # Query the counts of approved and pending quotes
+    # Query counts of approved and pending quotes
     approved_count = Quote.query.filter_by(status=1).count()
     pending_count = Quote.query.filter_by(status=0).count()
 
     if query:
-        # Perform the search only if the query is provided
+        # Perform text search in quotes
         quotes = Quote.query.filter(Quote.text.like(f'%{query}%'), Quote.status == 1).all()
 
-    # Render the search page with the results, counts, and search query
     return render_template('search.html', quotes=quotes, query=query, approved_count=approved_count, pending_count=pending_count)
+
+@app.route('/read', methods=['GET'])
+def read_quote():
+    quote_id = request.args.get('id', type=int)  # Get the quote number
+    
+    if not quote_id:
+        flash("Quote number is required.", 'error')
+        return redirect(url_for('search'))
+
+    # Find the quote by ID (only approved quotes)
+    quote = Quote.query.filter_by(id=quote_id, status=1).first()
+
+    if quote:
+        return render_template('quote.html', quote=quote)
+    else:
+        flash(f"No quote found with ID {quote_id}", 'error')
+        return redirect(url_for('search'))
 
 # Route for browsing approved quotes
 @app.route('/browse', methods=['GET'])
