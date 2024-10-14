@@ -1,123 +1,19 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ircquotes: FAQ</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
-</head>
-<body bgcolor="#ffffff" text="#000000" link="#c08000" vlink="#c08000" alink="#c08000">
+{% extends 'base.html' %}
 
-    <!-- Navigation -->
-    <center>
-        <table cellpadding="2" cellspacing="0" width="80%" border="0">
-            <tr>
-                <td bgcolor="#c08000" align="left">
-                    <font size="+1"><b><i>ircquotes</i></b></font>
-                </td>
-                <td bgcolor="#c08000" align="right">
-                    <font face="arial" size="+1"><b>FAQ</b></font>
-                </td>
-            </tr>
-        </table>
-        <table cellpadding="2" cellspacing="0" width="80%" border="0">
-            <tr>
-                <td class="footertext" align="left" bgcolor="#f0f0f0"></td>
-                <td align="right" bgcolor="#f0f0f0" class="toplinks" colspan="2">
-                    <a href="/">Home</a> /
-                    <a href="/random">Random</a> /
-                    <a href="/submit">Submit</a> /
-                    <a href="/browse">Browse</a> /
-                    <a href="/modapp">ModApp</a> /
-                    <a href="/search">Search</a>
-                    <a href="/faq">FAQ</a>
-                </td>
-            </tr>
-        </table>
-    </center>
+{% block content %}
+<center>
+    <table cellpadding="2" cellspacing="0" width="80%">
+        <tr>
+            <td class="bodytext">
+                <h2>Frequently Asked Questions (FAQ)</h2>
 
-    <!-- FAQ Content -->
-    <center>
-        <table cellpadding="2" cellspacing="0" width="80%">
-            <tr>
-                <td class="bodytext">
-                    <h2>Frequently Asked Questions (FAQ)</h2>
+                <h3>What is ircquotes?</h3>
+                <p>ircquotes is a community-driven website where users can submit and browse memorable quotes from IRC (Internet Relay Chat).</p>
 
-                    <h3>What is ircquotes?</h3>
-                    <p>ircquotes is a community-driven website where users can submit and browse memorable quotes from IRC (Internet Relay Chat). You can browse quotes, submit your own, and vote on others.</p>
-
-                    <h3>How does the API work?</h3>
-                    <p>The ircquotes API allows users to retrieve quotes programmatically. It is designed for developers who want to integrate IRC quotes into their own applications.</p>
-
-                    <h4>Available API Endpoints</h4>
-                    <ul>
-                        <li><strong>Get All Approved Quotes</strong>: <code>GET /api/quotes</code></li>
-                        <li><strong>Get a Specific Quote by ID</strong>: <code>GET /api/quotes/&lt;id&gt;</code></li>
-                        <li><strong>Get a Random Quote</strong>: <code>GET /api/random</code></li>
-                        <li><strong>Get Top Quotes</strong>: <code>GET /api/top</code></li>
-                        <li><strong>Search Quotes</strong>: <code>GET /api/search?q=&lt;search_term&gt;</code></li>
-                    </ul>
-
-                    <h4>Submitting Quotes via the API</h4>
-                    <p>The API also allows you to submit quotes, but this feature is rate-limited to prevent abuse. Each user is allowed 5 submissions per minute.</p>
-                    <ul>
-                        <li><strong>Submit a Quote</strong>: <code>POST /api/submit</code></li>
-                        <li><strong>Request Body</strong>: The request body should be in JSON format and contain the quote text like this:</li>
-                        <pre><code>{
-    "text": "This is a memorable quote!"
-}</code></pre>
-                        <li><strong>Validation Rules</strong>: Quotes must be between 5 and 1000 characters.</li>
-                    </ul>
-
-                    <h3>Rules for Submitting Quotes</h3>
-                    <p>To ensure that ircquotes remains a fun and enjoyable platform for everyone, we ask that you follow a few simple rules when submitting quotes:</p>
-                    <ul>
-                        <li><strong>No Offensive Content</strong>: Do not submit quotes that contain offensive language, hate speech, or other harmful content.</li>
-                        <li><strong>No Spam</strong>: Please avoid submitting irrelevant or repetitive content. The site is for memorable IRC quotes, not spam.</li>
-                        <li><strong>Stay On-Topic</strong>: Ensure that your submissions are actual quotes from IRC, not made-up content.</li>
-                        <li><strong>Rate Limiting</strong>: The submission rate is limited to 5 quotes per minute to prevent spam.</li>
-                        <li><strong>Moderation</strong>: All quotes are subject to approval by site moderators. Rejected quotes will not be publicly visible.</li>
-                    </ul>
-
-                    <h3>How are quotes moderated?</h3>
-                    <p>Quotes go through a moderation process where they are either approved, rejected, or deleted. Approved quotes become visible to all users, while rejected ones remain in the system but aren't shown publicly.</p>
-
-                    <h3>How can I get the top 100 quotes?</h3>
-                    <p>You can view the top 100 quotes by visiting the <a href="/top">Top 100 page</a>. The quotes are ranked by votes, with the highest-voted quotes appearing at the top.</p>
-
-                    <h3>How do I search for quotes?</h3>
-                    <p>Use the search bar on the site or the API endpoint <code>/api/search?q=&lt;search_term&gt;</code> to find specific quotes.</p>
-
-                    <h3>Can I delete my submitted quotes?</h3>
-                    <p>No, quotes are submitted anonymously, so there's no direct way to delete quotes after submission. However, site moderators can remove inappropriate content.</p>
-
-                    <h3>Who can I contact for help?</h3>
-                    <p>If you encounter any issues or have questions, feel free to reach out to the admin via the contact page or submit a help request through the site's interface.</p>
-                </td>
-            </tr>
-        </table>
-    </center>
-
-    <!-- Footer -->
-    <center>
-        <table border="0" cellpadding="2" cellspacing="0" width="80%" bgcolor="#c08000">
-            <tr>
-                <td bgcolor="#f0f0f0" class="toplinks" colspan="2">
-                    <a href="/">Home</a> /
-                    <a href="/random">Random</a> /
-                    <a href="/submit">Submit</a> /
-                    <a href="/browse">Browse</a> /
-                    <a href="/modapp">ModApp</a> /
-                    <a href="/search">Search</a>
-                    <a href="/faq">FAQ</a>
-                </td>
-            </tr>
-            <tr>
-                <td class="footertext" align="left">&nbsp;</td>
-                <td class="footertext" align="right">{{ approved_count }} quotes approved; {{ pending_count }} quotes pending</td>
-            </tr>
-        </table>
-    </center>
-
-</body>
-</html>
+                <!-- Add the rest of the FAQ content here -->
+                
+            </td>
+        </tr>
+    </table>
+</center>
+{% endblock %}

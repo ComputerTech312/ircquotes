@@ -1,87 +1,21 @@
-<!DOCTYPE html>
-<html lang="en">
+{% extends 'base.html' %}
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ircquotes: Quote #{{ quote.id }}</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
-</head>
+{% block content %}
+<center>
+    <table cellpadding="2" cellspacing="0" width="80%">
+        <tr>
+            <td valign="top">
+                <p class="quote">
+                    <a href="/quote?id={{ quote.id }}" title="Permanent link to this quote."><b>#{{ quote.id }}</b></a>
+                    <a href="/vote/{{ quote.id }}/upvote" class="qa">+</a>
+                    (<font color="green">{{ quote.votes }}</font>)
+                    <a href="/vote/{{ quote.id }}/downvote" class="qa">-</a>
+                    <a href="/flag/{{ quote.id }}" class="qa">[X]</a>
+                </p>
 
-<body bgcolor="#ffffff" text="#000000" link="#c08000" vlink="#c08000" alink="#c08000">
-
-    <!-- Top Navigation Bar -->
-    <center>
-        <table cellpadding="2" cellspacing="0" width="80%" border="0">
-            <tr>
-                <td bgcolor="#c08000" align="left">
-                    <font size="+1"><b><i>ircquotes</i></b></font>
-                </td>
-                <td bgcolor="#c08000" align="right">
-                    <font face="arial" size="+1"><b>Quote #{{ quote.id }}</b></font>
-                </td>
-            </tr>
-        </table>
-
-        <!-- Navigation Links -->
-        <table cellpadding="2" cellspacing="0" width="80%" border="0">
-            <tr>
-                <td class="footertext" align="left" bgcolor="#f0f0f0"></td>
-                <td align="right" bgcolor="#f0f0f0" class="toplinks" colspan="2">
-                    <a href="/">Home</a> /
-                    <a href="/random">Random</a> /
-                    <a href="/submit">Submit</a> /
-                    <a href="/browse">Browse</a> /
-                    <a href="/modapp">ModApp</a> /
-                    <a href="/search">Search</a>
-                    <a href="/faq">FAQ</a>
-                </td>
-            </tr>
-        </table>
-    </center>
-
-    <!-- Quote Display -->
-    <center>
-        <table cellpadding="2" cellspacing="0" width="80%">
-            <tr>
-                <td valign="top">
-                    <p class="quote">
-                        <a href="/quote?id={{ quote.id }}" title="Permanent link to this quote."><b>#{{ quote.id }}</b></a>
-                        <a href="/vote/{{ quote.id }}/upvote" class="qa">+</a>
-                        (<font color="green">{{ quote.votes }}</font>)
-                        <a href="/vote/{{ quote.id }}/downvote" class="qa">-</a>
-                        <a href="/flag/{{ quote.id }}" class="qa">[X]</a>
-                    </p>
-
-                    <p class="qt">{{ quote.text }}</p>
-                </td>
-                <td valign="top"></td>
-            </tr>
-        </table>
-    </center>
-
-    <!-- Footer -->
-    <center>
-        <table border="0" cellpadding="2" cellspacing="0" width="80%" bgcolor="#c08000">
-            <tr>
-                <td bgcolor="#f0f0f0" class="toplinks" colspan="2">
-                    <a href="/">Home</a> /
-                    <a href="/random">Random</a> /
-                    <a href="/submit">Submit</a> /
-                    <a href="/browse">Browse</a> /
-                </td>
-            </tr>
-            <tr>
-                <td class="footertext" align="left">&nbsp;</td>
-                <td class="footertext" align="right">{{ approved_count }} quotes approved; {{ pending_count }} quotes pending</td>
-            </tr>
-        </table>
-
-        <font size="-1">
-            &#169; ircquotes 2024, All Rights Reserved.
-        </font>
-    </center>
-
-</body>
-
-</html>
+                <p class="qt">{{ quote.text }}</p>
+            </td>
+        </tr>
+    </table>
+</center>
+{% endblock %}

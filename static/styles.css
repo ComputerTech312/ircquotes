@@ -1,26 +1,36 @@
 /* Global Styles */
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%; /* Ensure the body and HTML cover the full height */
+}
+
 body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh; /* Full viewport height */
     background-color: #ffffff;
     color: #000000;
     font-family: Arial, Helvetica, sans-serif;
-    margin: 0;
-    padding: 0;
-    transition: background-color 0.3s, color 0.3s;
 }
 
-/* Links */
-a {
-    color: #c08000;
-    text-decoration: none;
-    transition: color 0.3s;
+/* Wrapper for header and content */
+.wrapper {
+    flex: 1; /* Takes up remaining space between header and footer */
 }
 
-a:visited, a:link, a:hover {
-    color: #c08000;
-}
-
-a:hover {
-    text-decoration: underline;
+/* Footer */
+footer {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 0.8em; /* Smaller font size for a neat appearance */
+    background-color: #c08000; /* Footer background color */
+    padding: 3px 0; /* Minimal padding to make it skinny */
+    text-align: center;
+    color: #000000;
+    border-top: 1px solid #a06500; /* Optional subtle top border */
+    position: relative;
+    bottom: 0;
+    width: 100%;
 }
 
 /* Table and Layout */
@@ -120,16 +130,6 @@ td.quote-box {
     border: 1px solid #c08000;
     padding: 10px;
     margin-bottom: 10px;
-}
-
-/* Footer */
-footer {
-    font-family: Arial, Helvetica, sans-serif;
-    font-size: smaller;
-    background-color: #c08000;
-    padding: 10px;
-    text-align: center;
-    color: #000000;
 }
 
 /* Pagination */
@@ -297,4 +297,34 @@ footer {
     }
 }
 
+/* Header Styles */
+.header-table {
+    background-color: #c08000; /* The orange color block for the header */
+    width: 100%;
+    padding: 10px 0;
+}
 
+.header-left {
+    text-align: left;
+    font-size: 1.2em;
+}
+
+.header-right {
+    text-align: right;
+    font-size: 1.2em;
+}
+
+.nav-table {
+    background-color: #f0f0f0; /* A lighter background for the navigation section */
+    padding: 5px 0;
+}
+
+.toplinks a {
+    color: #c08000;
+    margin: 0 5px;
+    text-decoration: none;
+}
+
+.toplinks a:hover {
+    text-decoration: underline;
+}

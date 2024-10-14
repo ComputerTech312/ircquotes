@@ -1,0 +1,30 @@
+<header>
+    <center>
+        <table cellpadding="2" cellspacing="0" width="80%" border="0" class="header-table">
+            <tr>
+                <td class="header-left">
+                    <font size="+1"><b><i>ircquotes</i></b></font>
+                </td>
+                <td class="header-right">
+                    <font face="arial" size="+1"><b>{{ title }}</b></font>
+                </td>
+            </tr>
+        </table>
+
+        <!-- Navigation Links -->
+        <table cellpadding="2" cellspacing="0" width="80%" border="0" class="nav-table">
+            <tr>
+                <td class="footertext" align="left"></td>
+                <td align="right" class="toplinks">
+                    <a href="{{ url_for('index') }}">Home</a> /
+                    <a href="{{ url_for('random_quote') }}">Random</a> /
+                    <a href="{{ url_for('submit') }}">Submit</a> /
+                    <a href="{{ url_for('browse') }}">Browse</a> /
+                    <a href="{{ url_for('modapp') }}">ModApp</a> /
+                    <a href="{{ url_for('search') }}">Search</a> /
+                    <a href="{{ url_for('faq') }}">FAQ</a>
+                </td>
+            </tr>
+        </table>
+    </center>
+</header>
