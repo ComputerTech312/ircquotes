@@ -13,7 +13,7 @@ import logging
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///quotes.db'
-app.config['SECRET_KEY'] = open("flask_secret_key", "r").read().strip()
+app.config['SECRET_KEY'] = open("instance/flask_secret_key", "r").read().strip()
 db = SQLAlchemy(app)
 
 # Apply ProxyFix middleware
