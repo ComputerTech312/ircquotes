@@ -175,60 +175,126 @@ footer {
 
 /* Dark Mode */
 @media (prefers-color-scheme: dark) {
+    /* Body Styles */
     body {
-        background-color: #121212;
-        color: #ffffff;
+        background-color: #121212; /* Deep dark background */
+        color: #d1d1d1; /* Softer off-white for improved contrast */
     }
     
+    /* Link Styles */
     a {
         color: #ffa500;
+        text-decoration: none;
+        transition: color 0.3s ease;
     }
 
+    a:hover {
+        color: #ffcc80; /* Subtle, warmer hover color */
+        text-decoration: underline; /* Underline on hover for better accessibility */
+    }
+
+    /* Body Text */
     .bodytext {
-        line-height: 21px;
-        font-size: smaller;
-        color: #ffffff;
+        line-height: 1.7; /* Increased line spacing for readability */
+        font-size: 1rem; /* Consistent font size */
+        color: #e0e0e0; /* Softer white for text */
     }
 
+    /* Table, Input Fields, Textarea, Select Elements */
     table, td, input.text, textarea, select {
-        background-color: #01002c11;
-        color: #ffffff;
-        border-color: #ffa500;
+        background-color: #1a1a1a; /* Darker backgrounds for contrast */
+        color: #d1d1d1; /* Softer white text */
+        border-color: #ffa500; /* Keeping borders on accents */
     }
 
+    /* Submit Button */
     input.button {
         background-color: #ffa500;
-        color: #00000000;
+        color: #121212; /* Darker button text for readability */
+        border-radius: 6px; /* Slight rounding for modern design */
+        padding: 8px 12px; /* Increased padding for better button size */
+        font-weight: bold; /* More defined button text */
+        transition: background-color 0.3s ease, color 0.3s ease;
     }
 
     input.button:hover {
-        background-color: #ff8c00;
+        background-color: #ff8c00; /* Brighter hover color */
+        color: #ffffff; /* White text on hover for better contrast */
     }
 
+    /* Headers, Footer, and Other Text Elements */
     .footertext, .toplinks, h2 {
-        color: #ffa500;
+        color: #ffa500; /* Accent color for headers */
     }
 
+    h2 {
+        font-size: 1.5rem; /* Larger headers for better hierarchy */
+        border-bottom: 2px solid #ffa500; /* Visual distinction for headers */
+        padding-bottom: 10px;
+    }
+
+    /* Quote Box Borders */
     td.quote-box {
         border-color: #ffa500;
+        background-color: #1e1e1e; /* Subtle background for quotes */
+        padding: 15px; /* Improved padding for readability */
     }
 
+    /* Footer */
     footer {
-        background-color: #ffa500;
-        color: #121212;
+        background-color: #181818; /* Consistent footer background */
+        color: #d1d1d1; /* Softer text in footer */
+        border-top: 2px solid #ffa500; /* Accent line to separate footer */
+        padding: 15px;
     }
 
+    /* Pagination Links */
     #pagination a {
         border-color: #ffa500;
         color: #ffa500;
+        background-color: transparent;
+        padding: 8px 12px; /* Larger clickable area */
+        border-radius: 4px; /* Rounded edges for pagination */
+        transition: background-color 0.3s ease, color 0.3s ease;
     }
 
     #pagination a:hover {
-        background-color: #333333;
-        color: #ffffff;
+        background-color: #2e2e2e; /* Slightly brighter hover */
+        color: #ffffff; /* White text for hover state */
     }
 
+    /* Quote ID Links */
     .quote-id {
         color: #ffa500;
+        font-weight: bold; /* Bold for emphasis */
+        transition: color 0.3s ease;
+    }
+
+    .quote-id:hover {
+        color: #ffcc80; /* Brighter hover for clarity */
+    }
+
+    /* Other Element Styles */
+    input.text, textarea, select {
+        border-radius: 4px;
+        padding: 8px;
+    }
+
+    input.button:disabled {
+        background-color: #444444; /* Disabled button appearance */
+        color: #aaaaaa; /* Disabled text color */
+        cursor: not-allowed;
+    }
+
+    /* Table and Layout Enhancements */
+    table {
+        background-color: #1e1e1e;
+        border: 1px solid #ffa500;
+    }
+
+    td {
+        padding: 15px; /* More padding for larger table cells */
     }
 }
+
+
