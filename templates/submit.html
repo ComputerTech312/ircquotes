@@ -1,32 +1,85 @@
-{% extends 'base.html' %}
-
-{% block content %}
-<center>
-    <!-- Add a Quote Form -->
-    <form action="/submit" name="add" method="POST">
-        <table cellpadding="2" cellspacing="0" width="60%">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ircquotes: Add a Quote</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+</head>
+<body bgcolor="#ffffff" text="#000000" link="#c08000" vlink="#c08000" alink="#c08000" onload="document.add.newquote.focus();">
+    <center>
+        <!-- Header -->
+        <table cellpadding="2" cellspacing="0" width="80%" border="0">
             <tr>
-                <td><textarea cols="100%" rows="10" name="quote" class="text"></textarea></td>
-            </tr>
-            <tr>
-                <td>
-                    <input type="submit" value="Submit Quote" class="button" name="submit1">
+                <td bgcolor="#c08000" align="left">
+                    <font size="+1"><b><i>ircquotes</i></b></font>
                 </td>
-            </tr>
-            <tr>
-                <td>
-                    <br><br>
-                    You may submit quotes from any chat medium, so long as they have reasonable
-                    formatting (IRC, AIM, ICQ, Yahoo, NOT MSN or MS Chat).<br><br>
-                    Tips for approval: no timestamps, keep it short (trim useless parts), remove trailing laughs, and avoid inside jokes.
-                </td>
-            </tr>
-            <tr>
-                <td class="bodytext">
-                    <br><font size="-1"><b>Privacy Note:</b> Your IP address is never displayed publicly.</font>
+                <td bgcolor="#c08000" align="right">
+                    <font face="arial" size="+1"><b>Add a Quote</b></font>
                 </td>
             </tr>
         </table>
-    </form>
-</center>
-{% endblock %}
+
+        <!-- Navigation Links -->
+        <table cellpadding="2" cellspacing="0" width="80%" border="0">
+            <tr>
+                <td class="footertext" align="left" bgcolor="#f0f0f0">
+                    <!-- Paypal Donate can be added here if needed -->
+                </td>
+                <td align="right" bgcolor="#f0f0f0" class="toplinks" colspan="2">
+                    <a href="/">Home</a> /
+                    <a href="/random">Random</a> /
+                    <a href="/submit">Submit</a> /
+                    <a href="/browse">Browse</a> /
+                    <a href="/modapp">ModApp</a> /
+                    <a href="/search">Search</a>
+                    <a href="/faq">FAQ</a>
+                </td>
+            </tr>
+        </table>
+
+        <!-- Add a Quote Form -->
+        <form action="/submit" name="add" method="POST">
+            <table cellpadding="2" cellspacing="0" width="60%">
+                <tr>
+                    <td><textarea cols="100%" rows="10" name="quote" class="text"></textarea></td>
+                </tr>
+                <tr>
+                    <td><input type="checkbox" name="strip" checked> Automatically attempt to fix timestamps and common mistakes.</td>
+                </tr>
+                <tr>
+                    <td>
+                        <input type="submit" value="Preview Quote" class="button" name="submit2">
+                        <input type="submit" value="Submit Quote" class="button" name="submit1">
+                        &nbsp; &nbsp;<input type="reset" value="Reset" class="button">
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <br><br>
+                        You may submit quotes from any chat medium, so long as they have reasonable
+                        formatting (IRC, AIM, ICQ, Yahoo, NOT MSN or MS Chat).<br><br>
+                        Tips for approval: no timestamps, keep it short (trim useless parts), remove trailing laughs, and avoid inside jokes.
+                    </td>
+                </tr>
+                <tr>
+                    <td class="bodytext">
+                        <br><font size="-1"><b>Privacy Note:</b> Your IP address is never displayed publicly.</font>
+                    </td>
+                </tr>
+            </table>
+        </form>
+
+        <!-- Footer -->
+        <table border="0" cellpadding="2" cellspacing="0" width="80%" bgcolor="#c08000">
+            <tr>
+                <td class="footertext" align="right">{{ approved_count }} quotes approved; {{ pending_count }} quotes pending</td>
+            </tr>
+        </table>
+
+        <font size="-1">
+            &#169; ircquotes 2024, All Rights Reserved.
+        </font>
+    </center>
+</body>
+</html>

@@ -1,13 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ircquotes: Quote #{{ quote.id }}</title>
+    <title>ircquotes: Admin Login</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
 </head>
-
 <body bgcolor="#ffffff" text="#000000" link="#c08000" vlink="#c08000" alink="#c08000">
 
     <!-- Top Navigation Bar -->
@@ -18,7 +16,7 @@
                     <font size="+1"><b><i>ircquotes</i></b></font>
                 </td>
                 <td bgcolor="#c08000" align="right">
-                    <font face="arial" size="+1"><b>Quote #{{ quote.id }}</b></font>
+                    <font face="arial" size="+1"><b>Admin Login</b></font>
                 </td>
             </tr>
         </table>
@@ -40,24 +38,26 @@
         </table>
     </center>
 
-    <!-- Quote Display -->
+    <!-- Login Form -->
     <center>
-        <table cellpadding="2" cellspacing="0" width="80%">
-            <tr>
-                <td valign="top">
-                    <p class="quote">
-                        <a href="/quote?id={{ quote.id }}" title="Permanent link to this quote."><b>#{{ quote.id }}</b></a>
-                        <a href="/vote/{{ quote.id }}/upvote" class="qa">+</a>
-                        (<font color="green">{{ quote.votes }}</font>)
-                        <a href="/vote/{{ quote.id }}/downvote" class="qa">-</a>
-                        <a href="/flag/{{ quote.id }}" class="qa">[X]</a>
-                    </p>
-
-                    <p class="qt">{{ quote.text }}</p>
-                </td>
-                <td valign="top"></td>
-            </tr>
-        </table>
+        <h2>Admin Login</h2>
+        <form method="POST" action="/login">
+            <table>
+                <tr>
+                    <td>Username:</td>
+                    <td><input type="text" name="username" required></td>
+                </tr>
+                <tr>
+                    <td>Password:</td>
+                    <td><input type="password" name="password" required></td>
+                </tr>
+                <tr>
+                    <td colspan="2" align="center">
+                        <input type="submit" value="Login" class="button">
+                    </td>
+                </tr>
+            </table>
+        </form>
     </center>
 
     <!-- Footer -->
@@ -69,6 +69,9 @@
                     <a href="/random">Random</a> /
                     <a href="/submit">Submit</a> /
                     <a href="/browse">Browse</a> /
+                    <a href="/modapp">ModApp</a> /
+                    <a href="/search">Search</a>
+                    <a href="/faq">FAQ</a>
                 </td>
             </tr>
             <tr>
@@ -77,11 +80,8 @@
             </tr>
         </table>
 
-        <font size="-1">
-            &#169; ircquotes 2024, All Rights Reserved.
-        </font>
+        <font size="-1">&#169; ircquotes 2024, All Rights Reserved.</font>
     </center>
 
 </body>
-
 </html>

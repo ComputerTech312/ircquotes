@@ -1,9 +1,0 @@
-<div id="pagination">
-    {% if quotes.has_prev %}
-        <a href="{{ url_for('browse', page=quotes.prev_num) }}">&laquo; Previous</a>
-    {% endif %}
-    Page {{ quotes.page }} of {{ quotes.pages }}
-    {% if quotes.has_next %}
-        <a href="{{ url_for('browse', page=quotes.next_num) }}">Next &raquo;</a>
-    {% endif %}
-</div>

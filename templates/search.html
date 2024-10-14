@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ircquotes: Search & Read</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+</head>
+<body>
+
+    <!-- Header -->
+    <center>
+        <table cellpadding="2" cellspacing="0" width="80%" class="header">
+            <tr>
+                <td class="header-left">
+                    <b><i>ircquotes</i></b>
+                </td>
+                <td class="header-right">
+                    <b>Search & Read Quotes</b>
+                </td>
+            </tr>
+        </table>
+    </center>
+
+    <!-- Navigation Bar -->
+    <center>
+        <table cellpadding="2" cellspacing="0" width="80%" class="nav-bar">
+            <tr>
+                <td align="right" class="toplinks" colspan="2">
+                    <a href="/">Home</a> /
+                    <a href="/random">Random</a> /
+                    <a href="/submit">Submit</a> /
+                    <a href="/browse">Browse</a> /
+                    <a href="/modapp">ModApp</a> /
+                    <a href="/search">Search</a> /
+                    <a href="/faq">FAQ</a>
+                </td>
+            </tr>
+        </table>
+    </center>
+
+    <!-- Content Section -->
+    <center>
+        <div class="content-box">
+            <!-- Search for Quotes -->
+            <h2>Search for Quotes by Keyword</h2>
+            <form action="/search" method="GET">
+                <input type="text" name="q" class="text" placeholder="Enter search term" required>
+                <input type="submit" value="Search" class="button">
+            </form>
+
+            <!-- Read Quote by Number -->
+            <h2>Read a Quote by Number</h2>
+            <form action="/read" method="GET">
+                <input type="number" name="id" class="text" placeholder="Enter quote number" required>
+                <input type="submit" value="Read" class="button">
+            </form>
+        </div>
+
+        <!-- Results Section -->
+        <div class="results-box">
+            {% if query %}
+                <h3>Search Results for "{{ query }}"</h3>
+                {% if quotes %}
+                    <table cellpadding="0" cellspacing="3" width="80%">
+                        <tr>
+                            <td class="bodytext" width="100%" valign="top">
+                                {% for quote in quotes %}
+                                    <p class="quote">
+                                        <a href="/quote?id={{ quote.id }}" title="Permanent link to this quote.">
+                                            <b>#{{ quote.id }}</b>
+                                        </a>
+                                        <a href="/vote/{{ quote.id }}/upvote" class="qa">+</a>
+                                        (<span class="votes">{{ quote.votes }}</span>)
+                                        <a href="/vote/{{ quote.id }}/downvote" class="qa">-</a>
+                                    </p>
+                                    <p class="qt">{{ quote.text }}</p>
+                                    <hr>
+                                {% endfor %}
+                            </td>
+                        </tr>
+                    </table>
+                {% else %}
+                    <h4>No quotes found for "{{ query }}".</h4>
+                {% endif %}
+            {% endif %}
+        </div>
+    </center>
+
+    <!-- Footer -->
+    <center>
+        <table border="0" cellpadding="2" cellspacing="0" width="80%" class="footer">
+            <tr>
+                <td class="footertext" align="right">{{ approved_count }} quotes approved; {{ pending_count }} quotes pending</td>
+            </tr>
+        </table>
+        <div class="copyright">
+            &#169; ircquotes 2024, All Rights Reserved.
+        </div>
+    </center>
+
+</body>
+</html>
