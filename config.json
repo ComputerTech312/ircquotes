@@ -1,0 +1,64 @@
+{
+  "app": {
+    "name": "ircquotes",
+    "host": "0.0.0.0",
+    "port": 6969,
+    "debug": false
+  },
+  "gunicorn": {
+    "workers": 1,
+    "timeout": 30,
+    "keepalive": 5,
+    "max_requests": 1000,
+    "preload": true
+  },
+  "database": {
+    "uri": "sqlite:///instance/quotes.db?timeout=20",
+    "pool_timeout": 20,
+    "pool_recycle": -1,
+    "pool_pre_ping": true
+  },
+  "security": {
+    "csrf_enabled": true,
+    "csrf_time_limit": null,
+    "session_cookie_secure": false,
+    "session_cookie_httponly": true,
+    "session_cookie_samesite": "Lax",
+    "security_headers": {
+      "x_content_type_options": "nosniff",
+      "x_frame_options": "DENY",
+      "x_xss_protection": "1; mode=block",
+      "strict_transport_security": "max-age=31536000; includeSubDomains",
+      "content_security_policy": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'"
+    }
+  },
+  "admins": [
+    {
+      "username": "ComputerTech",
+      "password_hash": "$argon2id$v=19$m=65536,t=3,p=4$cIPRCJrjS1DwjaFov5G+BQ$yundbpf2i1jBrKsj96ra7wTNmVZ56SJR25XX4jp2yR8"
+    },
+    {
+      "username": "ender",
+      "password_hash": "$argon2id$v=19$m=65536,t=3,p=4$mc6K4NYnQAaaIiZnJNOItA$RmiZk+2u6wGpsA/eP7VzixL9k0vTfKxPlxp/b2BlcLc"
+    }
+  ],
+  "quotes": {
+    "min_length": 1,
+    "max_length": 5000,
+    "per_page": 25,
+    "auto_approve": false,
+    "allow_html": false
+  },
+  "features": {
+    "voting_enabled": true,
+    "flagging_enabled": true,
+    "copy_quotes_enabled": true,
+    "dark_mode_enabled": true,
+    "api_enabled": true,
+    "bulk_moderation_enabled": true
+  },
+  "logging": {
+    "level": "WARNING",
+    "format": "%(asctime)s [%(levelname)s] %(message)s"
+  }
+}

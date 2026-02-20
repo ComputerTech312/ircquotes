@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ircquotes: Random Quote</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+    <script>
+        // Prevent flash of white content by applying theme immediately
+        (function () {
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+                document.documentElement.className = 'dark-theme';
+            }
+        })();
+    </script>
+    <script src="{{ url_for('static', filename='voting.js') }}"></script>
+    <script src="{{ url_for('static', filename='theme.js') }}"></script>
+</head>
+
+<body bgcolor="#ffffff" text="#000000" link="#c08000" vlink="#c08000" alink="#c08000">
+    <center>
+        <table cellpadding="2" cellspacing="0" width="80%" border="0">
+            <tr>
+                <td bgcolor="#c08000" align="left">
+                    <font size="+1"><b><i>ircquotes</i></b></font>
+                </td>
+                <td bgcolor="#c08000" align="right">
+                    <font face="arial" size="+1"><b>Random Quote</b></font>
+                </td>
+            </tr>
+        </table>
+
+        <table cellpadding="2" cellspacing="0" width="80%" border="0">
+            <tr>
+                <td class="footertext" align="left" bgcolor="#f0f0f0"></td>
+                <td align="right" bgcolor="#f0f0f0" class="toplinks" colspan="2">
+                    <a href="/">Home</a> /
+                    <a href="/random">Random</a> /
+                    <a href="/submit">Submit</a> /
+                    <a href="/browse">Browse</a> /
+                    <a href="/modapp">ModApp</a> /
+                    <a href="/search">Search</a> /
+                    <a href="/faq">FAQ</a>
+                    <button id="theme-toggle" onclick="toggleDarkMode()" title="Toggle dark/light mode">[Theme]</button>
+                </td>
+            </tr>
+        </table>
+    </center>
+    <!-- Flash Messages -->
+    <center>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <table cellpadding="4" cellspacing="0" width="80%" border="0" style="margin-bottom: 6px;">
+            <tr>
+                <td
+                    style="background-color: {% if category == 'error' %}#ffdddd{% elif category == 'success' %}#ddffdd{% else %}#ddeeff{% endif %}; border: 1px solid {% if category == 'error' %}#cc0000{% elif category == 'success' %}#008800{% else %}#0066cc{% endif %}; padding: 8px;">
+                    <font
+                        color="{% if category == 'error' %}#cc0000{% elif category == 'success' %}#006600{% else %}#003399{% endif %}">
+                        {{ message }}</font>
+                </td>
+            </tr>
+        </table>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+    </center>
+
+    <center>
+        <table cellpadding="2" cellspacing="0" width="80%">
+            <tr>
+                <td valign="top">
+                    <p class="quote">
+                        <a href="/quote?id={{ quote.id }}" title="Permanent link to this quote."><b>#{{ quote.id
+                                }}</b></a>
+                        &nbsp;
+                        <a href="#" onclick="return vote({{ quote.id }}, 'upvote', this)" class="qa"
+                            id="up-{{ quote.id }}">+</a>
+                        <span id="votes-{{ quote.id }}">
+                            <font color="green">{{ quote.votes }}</font>
+                        </span>
+                        <a href="#" onclick="return vote({{ quote.id }}, 'downvote', this)" class="qa"
+                            id="down-{{ quote.id }}">-</a>
+                        &nbsp;
+                        <a href="#" onclick="return flag({{ quote.id }}, this)" class="qa">X</a>
+                        &nbsp;
+                        <a href="#" onclick="return copyQuote({{ quote.id }}, this)" class="qa"
+                            title="Copy quote to clipboard">C</a>
+                        &nbsp;
+                        <span style="color: #666; font-size: 0.9em;">
+                            {% if quote.submitted_at %}
+                            {{ quote.submitted_at.strftime('%d/%m/%y %H:%M') }}
+                            {% elif quote.date %}
+                            {{ quote.date.strftime('%d/%m/%y') }}
+                            {% endif %}
+                        </span>
+                    </p>
+                    <p class="qt">{{ quote.text|e }}</p>
+                </td>
+            </tr>
+        </table>
+    </center>
+
+    <center>
+        <table border="0" cellpadding="2" cellspacing="0" width="80%" bgcolor="#c08000">
+            <tr>
+                <td bgcolor="#f0f0f0" class="toplinks" colspan="2">
+                    <a href="/">Home</a> /
+                    <a href="/random">Random</a> /
+                    <a href="/submit">Submit</a> /
+                    <a href="/browse">Browse</a> /
+                    <a href="/modapp">ModApp</a> /
+                    <a href="/search">Search</a>
+                    <a href="/faq">FAQ</a>
+                </td>
+            </tr>
+            <tr>
+                <td class="footertext" align="left">&nbsp;</td>
+                <td class="footertext" align="right">{{ approved_count }} quotes approved; {{ pending_count }} quotes
+                    pending</td>
+            </tr>
+        </table>
+
+        <font size="-1">
+            @ ircquotes 2024-2026
+        </font>
+    </center>
+
+</body>
+
+</html>

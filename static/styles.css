@@ -1,0 +1,646 @@
+/* Global Styles */
+body {
+    background-color: #ffffff;
+    color: #000000;
+    font-family: Arial, Helvetica, sans-serif;
+    margin: 0;
+    padding: 0;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+/* Links */
+a {
+    color: #c08000;
+    text-decoration: none;
+    transition: color 0.3s;
+}
+
+a:visited,
+a:link,
+a:hover {
+    color: #c08000;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+/* Table and Layout */
+table {
+    width: 80%;
+    margin: 20px auto;
+    border-collapse: collapse;
+}
+
+td {
+    padding: 10px;
+}
+
+/* Headers */
+h2 {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 20px;
+    margin-bottom: 20px;
+    color: #c08000;
+}
+
+/* Text Classes */
+.smalltext {
+    font-size: 10px;
+    background-color: #f0f0f0;
+    color: #ffffff;
+}
+
+.bodytext {
+    line-height: 21px;
+    font-size: smaller;
+    color: #000000;
+}
+
+.footertext {
+    font-size: smaller;
+    color: #000000;
+    text-align: center;
+}
+
+.toplinks {
+    font-size: smaller;
+    color: #000000;
+    text-align: right;
+    padding-right: 20px;
+}
+
+.topnum {
+    font-family: Arial, Helvetica, sans-serif;
+    color: #000000;
+}
+
+/* Input Fields */
+input.text,
+textarea,
+select {
+    color: #000000;
+    background-color: #ffffff;
+    padding: 5px;
+    border: 1px solid #c08000;
+    border-radius: 4px;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+input.button {
+    background-color: #c08000;
+    color: #000000;
+    padding: 5px 10px;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+input.button:hover {
+    background-color: #a06500;
+}
+
+/* Quote Styling */
+.qt {
+    font-family: 'Courier New', 'Lucida Console', monospace;
+    font-size: 10pt;
+    margin-top: 0px;
+}
+
+.qa {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 10pt;
+    text-decoration: none;
+    font-weight: bold;
+    background-color: #f0f0f0;
+    border: 1px solid #808080;
+    padding: 1px 4px;
+    margin: 0 1px;
+    color: #000000;
+    display: inline-block;
+    min-width: 12px;
+    text-align: center;
+    border-radius: 2px;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.qa:hover {
+    background-color: #e0e0e0;
+    border-color: #606060;
+    text-decoration: none;
+}
+
+.qa:active {
+    background-color: #d0d0d0;
+    border: 1px inset #808080;
+}
+
+/* Quote controls wrapper for better mobile layout */
+.quote-controls {
+    display: inline-block;
+    white-space: nowrap;
+    margin: 0 2px;
+}
+
+.quote {
+    font-family: 'Courier New', 'Lucida Console', monospace;
+    font-size: smaller;
+    margin-bottom: 10px;
+}
+
+/* Borders for Quotes and Other Content */
+td.quote-box {
+    border: 1px solid #c08000;
+    padding: 10px;
+    margin-bottom: 10px;
+}
+
+/* Footer */
+footer {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: smaller;
+    background-color: #c08000;
+    padding: 10px;
+    text-align: center;
+    color: #000000;
+}
+
+/* Pagination */
+#pagination {
+    text-align: center;
+    margin: 20px 0;
+}
+
+#pagination a {
+    color: #c08000;
+    text-decoration: none;
+    padding: 5px 10px;
+    border: 1px solid #c08000;
+    margin: 0 5px;
+    border-radius: 4px;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+#pagination a:hover {
+    background-color: #f0f0f0;
+    color: #000000;
+}
+
+/* Quote List */
+.quote-list {
+    list-style-type: none;
+    padding: 0;
+}
+
+.quote-item {
+    margin-bottom: 20px;
+}
+
+.quote-id {
+    color: #c08000;
+    text-decoration: none;
+    font-weight: bold;
+    padding: 2px 4px;
+    margin-right: 4px;
+}
+
+.quote-id:hover {
+    text-decoration: underline;
+    background-color: rgba(192, 128, 0, 0.1);
+    border-radius: 2px;
+}
+
+/* Dark Mode Toggle Button */
+#theme-toggle {
+    background-color: #f0f0f0;
+    border: 2px outset #c0c0c0;
+    color: #000000;
+    padding: 4px 8px;
+    font-size: 14px;
+    cursor: pointer;
+    font-family: Arial, Helvetica, sans-serif;
+    margin-left: 10px;
+    vertical-align: middle;
+}
+
+#theme-toggle:hover {
+    background-color: #e0e0e0;
+}
+
+#theme-toggle:active {
+    border: 2px inset #c0c0c0;
+}
+
+/* Dark Mode Styles */
+body.dark-theme {
+    background-color: #121212 !important;
+    color: #d1d1d1;
+}
+
+body.dark-theme a {
+    color: #ffa500;
+}
+
+body.dark-theme a:hover {
+    color: #ffcc80;
+}
+
+body.dark-theme .bodytext {
+    color: #e0e0e0;
+}
+
+body.dark-theme .qt {
+    color: #ffffff;
+    background-color: #1e1e1e;
+    padding: 10px;
+    border-radius: 4px;
+    border-left: 3px solid #ffa500;
+}
+
+body.dark-theme .qa {
+    background-color: #2e2e2e;
+    color: #ffffff;
+    border: 1px solid #ffa500;
+}
+
+body.dark-theme .qa:hover {
+    background-color: #3e3e3e;
+    color: #ffcc80;
+}
+
+body.dark-theme table {
+    background-color: #1e1e1e;
+    border: 1px solid #ffa500;
+}
+
+/* Override all td backgrounds in dark mode */
+body.dark-theme td {
+    background-color: #1e1e1e !important;
+    color: #d1d1d1 !important;
+}
+
+/* Keep the golden header band */
+body.dark-theme td[bgcolor="#c08000"],
+body.dark-theme th[bgcolor="#c08000"] {
+    background-color: #8b5e00 !important;
+    color: #ffffff !important;
+}
+
+body.dark-theme th {
+    background-color: #2a2a2a !important;
+    color: #d1d1d1 !important;
+}
+
+/* Modapp specific: row status colours adapted for dark */
+body.dark-theme tr[style*="background-color"],
+body.dark-theme td[style*="background-color"] {
+    filter: brightness(0.35) saturate(1.4);
+}
+
+body.dark-theme #theme-toggle {
+    background-color: #2e2e2e;
+    border: 2px outset #555555;
+    color: #ffffff;
+}
+
+body.dark-theme #theme-toggle:hover {
+    background-color: #3e3e3e;
+}
+
+body.dark-theme #theme-toggle:active {
+    border: 2px inset #555555;
+}
+
+body.dark-theme input[type="text"],
+body.dark-theme input[type="number"],
+body.dark-theme input[type="search"],
+body.dark-theme input[type="datetime-local"],
+body.dark-theme input[type="checkbox"],
+body.dark-theme textarea,
+body.dark-theme select {
+    background-color: #2e2e2e;
+    color: #ffffff;
+    border: 1px solid #555555;
+}
+
+body.dark-theme input[type="submit"],
+body.dark-theme button {
+    background-color: #2e2e2e;
+    color: #ffffff;
+    border: 2px outset #555555;
+}
+
+body.dark-theme input[type="submit"]:hover,
+body.dark-theme button:hover {
+    background-color: #3e3e3e;
+}
+
+/* details/summary (used by Edit Date / Edit Quote) */
+body.dark-theme details summary {
+    color: #aaaaaa;
+}
+
+body.dark-theme details {
+    background-color: #242424;
+    border: 1px solid #444;
+    padding: 4px;
+    border-radius: 3px;
+}
+
+/* Pagination hover in dark mode */
+body.dark-theme #pagination a:hover {
+    background-color: #2e2e2e;
+    color: #ffa500;
+}
+
+/* Override inline font colors in dark mode */
+body.dark-theme font[color="green"] {
+    color: #90ee90 !important;
+}
+
+body.dark-theme font {
+    color: inherit !important;
+}
+
+/* Apply dark theme when class is on html element (prevents flash) */
+html.dark-theme body {
+    background-color: #121212 !important;
+    color: #d1d1d1;
+}
+
+html.dark-theme a {
+    color: #ffa500;
+}
+
+html.dark-theme a:hover {
+    color: #ffcc80;
+}
+
+html.dark-theme .bodytext {
+    color: #d1d1d1;
+}
+
+html.dark-theme .qt {
+    background-color: #2e2e2e;
+    color: #ffffff;
+    border-left: 3px solid #ffa500;
+}
+
+html.dark-theme .qa {
+    background-color: #333;
+    color: #d1d1d1;
+    border-color: #555;
+}
+
+html.dark-theme .qa:hover {
+    background-color: #444;
+    color: #fff;
+}
+
+html.dark-theme table {
+    background-color: #1e1e1e;
+}
+
+html.dark-theme td {
+    background-color: #1e1e1e !important;
+    color: #d1d1d1 !important;
+}
+
+html.dark-theme td[bgcolor="#c08000"],
+html.dark-theme th[bgcolor="#c08000"] {
+    background-color: #8b5e00 !important;
+    color: #ffffff !important;
+}
+
+html.dark-theme th {
+    background-color: #2a2a2a !important;
+    color: #d1d1d1 !important;
+}
+
+html.dark-theme tr[style*="background-color"] td,
+html.dark-theme td[style*="background-color"] {
+    filter: brightness(0.35) saturate(1.4);
+}
+
+html.dark-theme #theme-toggle {
+    background-color: #333;
+    color: #d1d1d1;
+    border-color: #555;
+}
+
+html.dark-theme #theme-toggle:hover {
+    background-color: #444;
+}
+
+html.dark-theme #theme-toggle:active {
+    background-color: #3e3e3e;
+}
+
+html.dark-theme input[type="text"],
+html.dark-theme input[type="number"],
+html.dark-theme input[type="search"],
+html.dark-theme input[type="datetime-local"],
+html.dark-theme input[type="checkbox"],
+html.dark-theme textarea,
+html.dark-theme select {
+    background-color: #333;
+    color: #d1d1d1;
+    border-color: #555;
+}
+
+html.dark-theme input[type="submit"],
+html.dark-theme button {
+    background-color: #444;
+    color: #d1d1d1;
+    border-color: #666;
+}
+
+html.dark-theme input[type="submit"]:hover,
+html.dark-theme button:hover {
+    background-color: #3e3e3e;
+}
+
+/* details/summary (used by Edit Date / Edit Quote) */
+html.dark-theme details summary {
+    color: #aaaaaa;
+}
+
+html.dark-theme details {
+    background-color: #242424;
+    border: 1px solid #444;
+    padding: 4px;
+    border-radius: 3px;
+}
+
+/* Pagination hover in dark mode */
+html.dark-theme #pagination a:hover {
+    background-color: #2e2e2e;
+    color: #ffa500;
+}
+
+/* Override inline font colors in dark mode (for html element) */
+html.dark-theme font[color="green"] {
+    color: #90ee90 !important;
+}
+
+html.dark-theme font {
+    color: inherit !important;
+}
+
+/* Mobile Responsive Design */
+@media screen and (max-width: 768px) {
+
+    /* Make tables and content mobile-friendly while keeping bash.org aesthetic */
+    table {
+        width: 95%;
+        font-size: 14px;
+    }
+
+    /* Navigation links - stack on small screens */
+    .toplinks {
+        font-size: 12px;
+        text-align: center;
+        padding: 5px;
+    }
+
+    /* Quote buttons - compact but touch-friendly */
+    .qa {
+        padding: 6px 8px;
+        margin: 1px 2px;
+        min-width: 28px;
+        min-height: 32px;
+        font-size: 14px;
+        display: inline-block;
+        text-align: center;
+        border-radius: 3px;
+        line-height: 1.2;
+    }
+
+    /* Quote text - ensure readability */
+    .qt {
+        font-size: 14px;
+        line-height: 1.4;
+        word-wrap: break-word;
+        padding: 8px;
+    }
+
+    /* Quote header - adjust spacing and make more compact */
+    .quote {
+        font-size: 13px;
+        margin-bottom: 6px;
+        line-height: 1.3;
+    }
+
+    /* Form elements - make touch-friendly */
+    input[type="text"],
+    input[type="number"],
+    textarea,
+    select {
+        width: 90%;
+        padding: 8px;
+        font-size: 16px;
+        /* Prevents zoom on iOS */
+        margin: 3px 0;
+    }
+
+    input[type="submit"],
+    button {
+        padding: 8px 12px;
+        font-size: 14px;
+        margin: 3px;
+        min-height: 40px;
+        /* Reasonable touch target */
+    }
+
+    /* Pagination - mobile friendly */
+    #pagination {
+        font-size: 13px;
+        text-align: center;
+        padding: 8px;
+    }
+
+    #pagination a {
+        padding: 6px 10px;
+        margin: 2px;
+        display: inline-block;
+        border-radius: 3px;
+    }
+
+    /* ModApp table - horizontal scroll for wide tables */
+    .modapp-table-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .modapp-table-container table {
+        min-width: 600px;
+        width: auto;
+    }
+
+    /* Compact view for smaller screens */
+    @media screen and (max-width: 480px) {
+        .mobile-hide {
+            display: none;
+        }
+
+        .qa {
+            padding: 5px 7px;
+            font-size: 13px;
+            min-width: 26px;
+            min-height: 30px;
+            margin: 1px;
+        }
+
+        .quote {
+            font-size: 12px;
+            margin-bottom: 5px;
+        }
+
+        .qt {
+            font-size: 13px;
+            padding: 6px;
+        }
+
+        /* Stack quote controls for very small screens */
+        .quote-controls {
+            white-space: nowrap;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+    }
+}
+
+/* Touch-friendly improvements for all screen sizes */
+@media (hover: none) and (pointer: coarse) {
+
+    /* This targets touch devices */
+    .qa {
+        padding: 7px 10px;
+        margin: 2px;
+        min-height: 36px;
+        min-width: 32px;
+        border-radius: 4px;
+    }
+
+    a {
+        padding: 3px;
+        margin: 1px;
+    }
+
+    /* Ensure all interactive elements are large enough but not oversized */
+    button,
+    input[type="submit"],
+    input[type="button"] {
+        min-height: 40px;
+        min-width: 40px;
+        padding: 8px 12px;
+    }
+
+    /* Theme toggle button - keep compact */
+    #theme-toggle {
+        min-height: 36px;
+        min-width: 36px;
+        padding: 6px 10px;
+    }
+}
