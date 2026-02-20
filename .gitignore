@@ -1,0 +1,39 @@
+# Virtual Environment
+venv/
+.venv/
+
+# Flask instance folder - keep the folder but ignore sensitive files
+instance/flask_secret_key
+instance/*.log
+# instance/quotes.db
+
+# Database
+*.db
+!instance/quotes.db
+*.db-shm
+*.db-wal
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Testing
+.pytest_cache/
+
+# Logs
+*.log
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+
+# Temporary data
+bash.org/
+bash.org.txt.tar.gz
+

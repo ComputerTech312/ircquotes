@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ircquotes: Admin Panel</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+    <script>
+        // Prevent flash of white content by applying theme immediately
+        (function () {
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+                document.documentElement.className = 'dark-theme';
+            }
+        })();
+    </script>
+    <script src="{{ url_for('static', filename='theme.js') }}"></script>
+    <script src="{{ url_for('static', filename='modapp.js') }}"></script>
+</head>
+
+<body bgcolor="#ffffff" text="#000000" link="#c08000" vlink="#c08000" alink="#c08000">
+
+    <!-- Navigation -->
+    <center>
+        <table cellpadding="2" cellspacing="0" width="80%" border="0">
+            <tr>
+                <td bgcolor="#c08000" align="left">
+                    <font size="+1"><b><i>ircquotes</i></b></font>
+                </td>
+                <td bgcolor="#c08000" align="right">
+                    <font face="arial" size="+1"><b>Admin Panel</b></font>
+                </td>
+            </tr>
+        </table>
+        <table cellpadding="2" cellspacing="0" width="80%" border="0">
+            <tr>
+                <td class="footertext" align="left" bgcolor="#f0f0f0"></td>
+                <td align="right" bgcolor="#f0f0f0" class="toplinks" colspan="2">
+                    <a href="/">Home</a> /
+                    <a href="/random">Random</a> /
+                    <a href="/submit">Submit</a> /
+                    <a href="/browse">Browse</a> /
+                    <a href="/modapp">Modapp</a>
+                    <button id="theme-toggle" onclick="toggleDarkMode()" title="Toggle dark/light mode">[Theme]</button>
+                </td>
+            </tr>
+        </table>
+    </center>
+
+    <!-- Flash Messages -->
+    <center>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <table cellpadding="4" cellspacing="0" class="flash-container" border="0">
+            <tr>
+                <td
+                    class="flash-message {% if category == 'error' or category == 'danger' %}flash-error{% elif category == 'success' %}flash-success{% elif category == 'warning' %}flash-warning{% else %}flash-info{% endif %}">
+                    {{ message }}
+                </td>
+            </tr>
+        </table>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+    </center>
+
+    <!-- Main Content: All Quotes for Moderation -->
+    <center>
+        <h2>All Quotes for Moderation</h2>
+
+        <!-- Filter Options -->
+        <form method="GET" action="/modapp">
+            <label for="filter">Filter by:</label>
+            <select name="filter" id="filter">
+                <option value="pending" {% if filter_status=='pending' %}selected{% endif %}>Pending</option>
+                <option value="approved" {% if filter_status=='approved' %}selected{% endif %}>Approved</option>
+                <option value="rejected" {% if filter_status=='rejected' %}selected{% endif %}>Rejected</option>
+                <option value="flagged" {% if filter_status=='flagged' %}selected{% endif %}>Flagged</option>
+            </select>
+            <input type="submit" value="Apply Filter">
+        </form>
+
+        {% if quotes.items %}
+        <!-- Bulk Actions Form -->
+        <form id="bulk-action-form" method="POST" action="/modapp/bulk">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+            <div style="margin: 10px 0; padding: 10px; background-color: #f0f0f0; border: 1px solid #ccc;">
+                <b>Bulk Actions:</b>
+                <input type="checkbox" id="select-all" onchange="toggleAllCheckboxes(this)"> <label
+                    for="select-all">Select All</label>
+                &nbsp;&nbsp;
+                <button type="submit" name="action" value="approve" class="qa"
+                    onclick="return confirmBulkAction('approve')">Bulk Approve</button>
+                <button type="submit" name="action" value="reject" class="qa"
+                    onclick="return confirmBulkAction('reject')">Bulk Reject</button>
+                <button type="submit" name="action" value="delete" class="qa"
+                    onclick="return confirmBulkAction('delete')">Bulk Delete</button>
+                <button type="submit" name="action" value="clear_flags" class="qa"
+                    onclick="return confirmBulkAction('clear flags')">Clear All Flags</button>
+                &nbsp;&nbsp;|&nbsp;&nbsp;
+                <button type="button" id="toggle-edit-date" class="qa" onclick="toggleEditDates()">Edit Dates</button>
+                <button type="button" id="toggle-edit-quote" class="qa" onclick="toggleEditQuotes()">Edit
+                    Quotes</button>
+            </div>
+
+            <!-- Table for Quotes -->
+            <div class="modapp-table-container">
+                <table border="1" cellpadding="5" cellspacing="0" width="100%">
+                    <tr>
+                        <th>Select</th>
+                        <th>Quote ID</th>
+                        <th>Quote</th>
+                        <th>Status</th>
+                        <th>Flags</th>
+                        <th class="mobile-hide">Submitted At</th>
+                        <th class="mobile-hide">IP Address</th>
+                        <th class="mobile-hide">User Agent</th>
+                        <th>Actions</th>
+                    </tr>
+                    <!-- Loop through quotes -->
+                    {% for quote in quotes.items %}
+                    <tr
+                        class="{% if quote.flag_count > 5 %}row-flagged-high{% elif quote.flag_count > 2 %}row-flagged-low{% elif quote.status == 1 %}row-approved{% elif quote.status == 2 %}row-rejected{% else %}row-pending{% endif %}">
+                        <td><input type="checkbox" name="quote_ids" value="{{ quote.id }}" class="quote-checkbox"></td>
+                        <td>#{{ quote.id }}</td>
+                        <td class="quote-text-cell" data-quote-id="{{ quote.id }}">
+                            <div class="view-text">{{ quote.text|e }}</div>
+                            <div class="edit-text" style="display:none;">
+                                <textarea class="new-quote-text" rows="5"
+                                    style="width:100%;">{{ quote.text|e }}</textarea>
+                                <button type="button" onclick="saveQuoteText({{ quote.id }}, this)">Save</button>
+                                <button type="button" onclick="cancelEditQuote(this)">Cancel</button>
+                            </div>
+                        </td>
+                        <td>
+                            {% if filter_status == 'flagged' %}
+                            <!-- Prominent status display for flagged quotes -->
+                            {% if quote.status == 0 %}
+                            <span
+                                style="background-color: #fff3cd; padding: 2px 6px; border-radius: 3px; font-weight: bold;">[!]
+                                PENDING + FLAGGED</span>
+                            {% elif quote.status == 1 %}
+                            <span
+                                style="background-color: #d4edda; padding: 2px 6px; border-radius: 3px; font-weight: bold;">[OK]
+                                APPROVED + FLAGGED</span>
+                            {% else %}
+                            <span
+                                style="background-color: #f8d7da; padding: 2px 6px; border-radius: 3px; font-weight: bold;">[X]
+                                REJECTED + FLAGGED</span>
+                            {% endif %}
+                            {% else %}
+                            <!-- Normal status display -->
+                            {% if quote.status == 0 %}
+                            Pending
+                            {% elif quote.status == 1 %}
+                            Approved
+                            {% else %}
+                            Rejected
+                            {% endif %}
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if quote.flag_count > 0 %}
+                            <span style="color: red; font-weight: bold;">{{ quote.flag_count }}</span>
+                            {% else %}
+                            0
+                            {% endif %}
+                        </td>
+                        <td class="mobile-hide date-cell" data-quote-id="{{ quote.id }}">
+                            <div class="view-date">
+                                {% if quote.submitted_at %}
+                                {{ quote.submitted_at.strftime('%d/%m/%y %H:%M:%S') }}
+                                {% elif quote.date %}
+                                {{ quote.date.strftime('%d/%m/%y') }} (legacy)
+                                {% else %}
+                                No date
+                                {% endif %}
+                            </div>
+                            <div class="edit-date" style="display:none;">
+                                <input type="datetime-local" class="new-quote-date"
+                                    value="{{ (quote.submitted_at or quote.date).strftime('%Y-%m-%dT%H:%M') if (quote.submitted_at or quote.date) else '' }}"
+                                    style="font-size:0.85em; width:100%;">
+                                <button type="button" style="font-size:0.8em; margin-top:2px;"
+                                    onclick="saveQuoteDate({{ quote.id }}, this)">Save</button>
+                                <button type="button" style="font-size:0.8em; margin-top:2px;"
+                                    onclick="cancelEditDate(this)">Cancel</button>
+                            </div>
+                        </td>
+                        <td class="mobile-hide">{{ quote.ip_address|e }}</td>
+                        <td class="mobile-hide">{{ quote.user_agent|e|truncate(50) }}</td>
+                        <td>
+                            {% if filter_status == 'flagged' %}
+                            <!-- Special actions for flagged quotes -->
+                            {% if quote.status == 1 %}
+                            <!-- Already approved but flagged -->
+                            <a href="/clear_flags/{{ quote.id }}" style="color: blue;">Clear Flags</a> |
+                            <a href="/reject/{{ quote.id }}" style="color: orange;">Reject</a> |
+                            <a href="/delete/{{ quote.id }}" style="color: red;">Delete</a>
+                            {% elif quote.status == 0 %}
+                            <!-- Pending and flagged -->
+                            <a href="/approve/{{ quote.id }}" style="color: green;">Approve</a> |
+                            <a href="/clear_flags/{{ quote.id }}" style="color: blue;">Clear Flags</a> |
+                            <a href="/reject/{{ quote.id }}" style="color: orange;">Reject</a> |
+                            <a href="/delete/{{ quote.id }}" style="color: red;">Delete</a>
+                            {% else %}
+                            <!-- Rejected and flagged -->
+                            <a href="/clear_flags/{{ quote.id }}" style="color: blue;">Clear Flags</a> |
+                            <a href="/delete/{{ quote.id }}" style="color: red;">Delete</a>
+                            {% endif %}
+                            {% else %}
+                            <!-- Standard actions for non-flagged quotes -->
+                            <a href="/approve/{{ quote.id }}">Approve</a> |
+                            <a href="/reject/{{ quote.id }}">Reject</a> |
+                            <a href="/delete/{{ quote.id }}">Delete</a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </table>
+            </div>
+        </form>
+
+        <!-- Bulk Actions JavaScript -->
+        <script>
+            function toggleAllCheckboxes(selectAllCheckbox) {
+                const checkboxes = document.querySelectorAll('.quote-checkbox');
+                checkboxes.forEach(checkbox => {
+                    checkbox.checked = selectAllCheckbox.checked;
+                });
+            }
+
+            function confirmBulkAction(action) {
+                const selectedCheckboxes = document.querySelectorAll('.quote-checkbox:checked');
+                if (selectedCheckboxes.length === 0) {
+                    alert('Please select at least one quote.');
+                    return false;
+                }
+
+                const count = selectedCheckboxes.length;
+                const message = `Are you sure you want to ${action} ${count} selected quote(s)?`;
+                return confirm(message);
+            }
+        </script>
+
+        <!-- Pagination Links -->
+        <div id="pagination">
+            {% if quotes.has_prev %}
+            <a href="{{ url_for('modapp', page=quotes.prev_num, filter=filter_status) }}">&laquo; Previous</a>
+            {% endif %}
+            <span>Page {{ quotes.page }} of {{ quotes.pages }}</span>
+            {% if quotes.has_next %}
+            <a href="{{ url_for('modapp', page=quotes.next_num, filter=filter_status) }}">Next &raquo;</a>
+            {% endif %}
+        </div>
+
+        {% else %}
+        <p>No quotes available for moderation.</p>
+        {% endif %}
+    </center>
+
+    <!-- Footer -->
+    <center>
+        <table border="0" cellpadding="2" cellspacing="0" width="80%" bgcolor="#c08000">
+            <tr>
+                <td bgcolor="#f0f0f0" class="toplinks" colspan="2" align="center">
+                    <a href="/">Home</a> /
+                    <a href="/random">Random</a> /
+                    <a href="/submit">Submit</a> /
+                    <a href="/browse">Browse</a> /
+                    <a href="/modapp">ModApp</a> /
+                    <a href="/search">Search</a> /
+                    <a href="/faq">FAQ</a>
+                </td>
+            </tr>
+            <tr>
+                <td class="footertext" align="left">&nbsp;</td>
+                <td class="footertext" align="right">
+                    {{ approved_count }} quotes approved; {{ pending_count }} quotes pending; {{ rejected_count }}
+                    quotes rejected;
+                    <span style="color: red; font-weight: bold;">{{ flagged_count }} quotes flagged</span>
+                </td>
+            </tr>
+        </table>
+
+        <font size="-1"><br>@ ircquotes 2024-2026</font>
+    </center>
+
+</body>
+
+</html>
