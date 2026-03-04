@@ -4,4 +4,5 @@ Flask-CORS==4.0.0
 Flask-WTF==1.2.1
 argon2-cffi==23.1.0
 gunicorn==21.2.0
+psycopg2-binary==2.9.9
 pytest==8.0.0

@@ -17,7 +17,7 @@ def main():
     # Get configuration values from config.json
     host = config.app_host
     port = config.app_port
-    workers = config.get('gunicorn.workers', 1)  # Default to 1 to avoid SQLite locking
+    workers = config.get('gunicorn.workers', 1)
     timeout = config.get('gunicorn.timeout', 30)
     keepalive = config.get('gunicorn.keepalive', 5)
     max_requests = config.get('gunicorn.max_requests', 1000)

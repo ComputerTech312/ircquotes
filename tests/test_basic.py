@@ -3,57 +3,27 @@ import pytest
 from app import app, db, Quote, Vote
 import os
 import json
-import tempfile
 from datetime import datetime
-from sqlalchemy.pool import NullPool
 
-
-import pytest
-from app import app, db, Quote, Vote
-import os
-import shutil
-from datetime import datetime
-from sqlalchemy.pool import NullPool
-
-DB_PATH = 'instance/quotes.db'
-BACKUP_PATH = 'instance/quotes.db.bak'
 
 @pytest.fixture
 def client():
-    # Configure app for testing
+    # Configure app for testing with a separate test database
     app.config['TESTING'] = True
     app.config['WTF_CSRF_ENABLED'] = False
-    app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {'poolclass': NullPool}
-    
-    # Backup existing DB
-    db_existed = os.path.exists(DB_PATH)
-    if db_existed:
-        shutil.move(DB_PATH, BACKUP_PATH)
-        # Also move WAL/SHM files if they exist
-        if os.path.exists(DB_PATH + '-wal'): shutil.move(DB_PATH + '-wal', BACKUP_PATH + '-wal')
-        if os.path.exists(DB_PATH + '-shm'): shutil.move(DB_PATH + '-shm', BACKUP_PATH + '-shm')
-    
-    # Remove any stray DB file (though move should have handled it)
-    if os.path.exists(DB_PATH):
-        os.remove(DB_PATH)
 
-    # Force re-creation of the default DB
     with app.app_context():
         db.create_all()
-    
+
     with app.test_client() as client:
         yield client
 
-    # Teardown: Restore DB
-    if os.path.exists(DB_PATH):
-        os.remove(DB_PATH)
-        if os.path.exists(DB_PATH + '-wal'): os.remove(DB_PATH + '-wal')
-        if os.path.exists(DB_PATH + '-shm'): os.remove(DB_PATH + '-shm')
-
-    if db_existed:
-        shutil.move(BACKUP_PATH, DB_PATH)
-        if os.path.exists(BACKUP_PATH + '-wal'): shutil.move(BACKUP_PATH + '-wal', DB_PATH + '-wal')
-        if os.path.exists(BACKUP_PATH + '-shm'): shutil.move(BACKUP_PATH + '-shm', DB_PATH + '-shm')
+    # Teardown: remove test data
+    with app.app_context():
+        db.session.remove()
+        Vote.query.delete()
+        Quote.query.delete()
+        db.session.commit()
 
 @pytest.fixture
 def init_data(client):
@@ -68,7 +38,7 @@ def init_data(client):
         db.session.add(quote1)
         db.session.add(quote2)
         db.session.commit()
-        return quote1.id, quote2.id 
+        return quote1.id, quote2.id
 
 
 def test_index(client):
@@ -90,7 +60,7 @@ def test_vote_upvote(client, init_data):
     q1_id, _ = init_data
     
     # Vote up
-    response = client.get(f'/vote/{q1_id}/upvote', 
+    response = client.post(f'/vote/{q1_id}/upvote', 
                          headers={'X-Requested-With': 'XMLHttpRequest'},
                          environ_base={'REMOTE_ADDR': '192.168.1.50'})
     
@@ -113,12 +83,12 @@ def test_vote_double_vote(client, init_data):
     q1_id, _ = init_data
     
     # First vote
-    client.get(f'/vote/{q1_id}/upvote', 
+    client.post(f'/vote/{q1_id}/upvote', 
               headers={'X-Requested-With': 'XMLHttpRequest'},
               environ_base={'REMOTE_ADDR': '192.168.1.50'})
     
     # Second vote (toggle off)
-    response = client.get(f'/vote/{q1_id}/upvote', 
+    response = client.post(f'/vote/{q1_id}/upvote', 
                          headers={'X-Requested-With': 'XMLHttpRequest'},
                          environ_base={'REMOTE_ADDR': '192.168.1.50'})
                          
@@ -131,12 +101,12 @@ def test_vote_change(client, init_data):
     q1_id, _ = init_data
     
     # Upvote
-    client.get(f'/vote/{q1_id}/upvote', 
+    client.post(f'/vote/{q1_id}/upvote', 
               headers={'X-Requested-With': 'XMLHttpRequest'},
               environ_base={'REMOTE_ADDR': '192.168.1.50'})
               
     # Change to Downvote
-    response = client.get(f'/vote/{q1_id}/downvote', 
+    response = client.post(f'/vote/{q1_id}/downvote', 
                          headers={'X-Requested-With': 'XMLHttpRequest'},
                          environ_base={'REMOTE_ADDR': '192.168.1.50'})
                          

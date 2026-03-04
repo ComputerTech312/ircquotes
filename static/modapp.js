@@ -10,10 +10,13 @@ async function moderationAction(action, quoteId, element) {
         element.textContent = 'Loading...';
         element.style.pointerEvents = 'none';
 
+        const csrfToken = document.querySelector('input[name="csrf_token"]');
+
         const response = await fetch(`/${action}/${quoteId}`, {
-            method: 'GET',
+            method: 'POST',
             headers: {
-                'X-Requested-With': 'XMLHttpRequest'  // Tell server this is AJAX
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': csrfToken ? csrfToken.value : ''
             }
         });
 

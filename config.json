@@ -13,9 +13,9 @@
     "preload": true
   },
   "database": {
-    "uri": "sqlite:///instance/quotes.db?timeout=20",
+    "uri": "postgresql://ircquotes:czUa7FUinHPcKlynK_JILbpgMej-whSa@localhost/ircquotes",
     "pool_timeout": 20,
-    "pool_recycle": -1,
+    "pool_recycle": 300,
     "pool_pre_ping": true
   },
   "security": {

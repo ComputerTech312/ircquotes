@@ -1,4 +1,9 @@
 // AJAX voting functionality
+function getCSRFToken() {
+    const meta = document.querySelector('meta[name="csrf-token"]');
+    return meta ? meta.getAttribute('content') : '';
+}
+
 function vote(quoteId, action, buttonElement) {
     // Prevent multiple clicks on the same button
     if (buttonElement.disabled) {
@@ -10,9 +15,10 @@ function vote(quoteId, action, buttonElement) {
     
     // Make AJAX request
     fetch(`/vote/${quoteId}/${action}`, {
-        method: 'GET',
+        method: 'POST',
         headers: {
-            'X-Requested-With': 'XMLHttpRequest'
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': getCSRFToken()
         }
     })
     .then(response => {
@@ -88,9 +94,10 @@ function flag(quoteId, buttonElement) {
     buttonElement.disabled = true;
     
     fetch(`/flag/${quoteId}`, {
-        method: 'GET',
+        method: 'POST',
         headers: {
-            'X-Requested-With': 'XMLHttpRequest'
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': getCSRFToken()
         }
     })
     .then(response => response.json())

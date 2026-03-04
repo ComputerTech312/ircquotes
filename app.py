@@ -9,12 +9,15 @@ import random
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
 import logging
-from sqlalchemy import event
-from sqlalchemy.engine import Engine
-import sqlite3
 import time
 import ipaddress
+from collections import defaultdict
 from config_loader import config  # Import configuration system
+
+# ── In-memory login rate limiter ──────────────────────────────────────────────
+_login_attempts: dict[str, list[float]] = defaultdict(list)
+LOGIN_MAX_ATTEMPTS = 5        # max tries per window
+LOGIN_WINDOW_SECONDS = 300    # 5-minute window
 
 def db_retry_operation(operation, max_retries=2, delay=0.01):
     """
@@ -41,9 +44,9 @@ def db_retry_operation(operation, max_retries=2, delay=0.01):
             last_exception = e
             error_msg = str(e).lower()
             
-            # Retry on database lock errors
-            if ('database is locked' in error_msg or 
-                'sqlite3.operationalerror' in error_msg or
+            # Retry on transient database errors (deadlocks, serialization failures, etc.)
+            if ('deadlock' in error_msg or
+                'serialization failure' in error_msg or
                 'transaction has been rolled back' in error_msg):
                 
                 try:
@@ -80,45 +83,9 @@ def validate_ip_address(ip_str):
         app.logger.warning(f"Invalid IP address detected: {ip_str}")
         return '127.0.0.1'
 
-# Configure SQLite for better concurrency and performance
-@event.listens_for(Engine, "connect")
-def set_sqlite_pragma(dbapi_connection, connection_record):
-    if isinstance(dbapi_connection, sqlite3.Connection):
-        cursor = dbapi_connection.cursor()
-        # Set WAL mode for better concurrency
-        cursor.execute("PRAGMA journal_mode=WAL")
-        # Reduce timeout for faster failures instead of long waits
-        cursor.execute("PRAGMA busy_timeout=1000")  # 1 second - faster failure
-        # Optimize for performance
-        cursor.execute("PRAGMA synchronous=NORMAL")
-        cursor.execute("PRAGMA cache_size=20000")  # Larger cache
-        cursor.execute("PRAGMA temp_store=memory")
-        cursor.execute("PRAGMA mmap_size=268435456")  # 256MB memory mapped
-        cursor.execute("PRAGMA wal_autocheckpoint=500")  # More frequent checkpoints
-        cursor.execute("PRAGMA optimize")  # Enable automatic index optimization
-        cursor.close()
-
 app = Flask(__name__)
 
-# Fix SQLite path to be absolute to avoid CWD ambiguity
-# This ensures it works regardless of where the script is run from
-db_uri = config.database_uri
-if db_uri.startswith('sqlite:///instance/'):
-    import os
-    base_dir = os.path.abspath(os.path.dirname(__file__))
-    # Extract filename and params
-    rel_path_with_params = db_uri.split('sqlite:///instance/')[1]
-    if '?' in rel_path_with_params:
-        filename, params = rel_path_with_params.split('?', 1)
-        params = '?' + params
-    else:
-        filename = rel_path_with_params
-        params = ''
-        
-    db_path = os.path.join(base_dir, 'instance', filename)
-    app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{db_path}{params}"
-else:
-    app.config['SQLALCHEMY_DATABASE_URI'] = config.database_uri
+app.config['SQLALCHEMY_DATABASE_URI'] = config.database_uri
 
 import os
 import secrets
@@ -159,9 +126,14 @@ app.config['WTF_CSRF_ENABLED'] = config.csrf_enabled
 app.config['WTF_CSRF_TIME_LIMIT'] = config.get('security.csrf_time_limit')
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
     'pool_timeout': config.get('database.pool_timeout', 20),
-    'pool_recycle': config.get('database.pool_recycle', -1),
+    'pool_recycle': config.get('database.pool_recycle', 300),
     'pool_pre_ping': config.get('database.pool_pre_ping', True)
 }
+
+# Limit admin session lifetime (default 2 hours)
+app.config['PERMANENT_SESSION_LIFETIME'] = datetime.timedelta(
+    seconds=config.get('security.session_lifetime_seconds', 7200)
+)
 
 # Initialize CSRF protection
 csrf = CSRFProtect(app)
@@ -226,8 +198,8 @@ class Vote(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     quote_id = db.Column(db.Integer, db.ForeignKey('quote.id'), nullable=False)
     ip_address = db.Column(db.String(45))
-    vote_type = db.Column(db.String(10)) # 'upvote' or 'downvote'
-    timestamp = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    vote_type = db.Column(db.String(10)) # 'upvote', 'downvote', or 'flag'
+    timestamp = db.Column(db.DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
     
     __table_args__ = (
         db.Index('idx_vote_quote_ip', 'quote_id', 'ip_address'),
@@ -331,28 +303,31 @@ def submit():
         ip_address = validate_ip_address(request.remote_addr)  # Get user's IP address
         
         # Rate Limiting: Check for submissions in the last 60 seconds
-        limit_time = datetime.datetime.utcnow() - datetime.timedelta(seconds=60)
+        limit_time = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(seconds=60)
         if Quote.query.filter(Quote.ip_address == ip_address, Quote.submitted_at > limit_time).first():
             flash("You are submitting too fast. Please wait a minute before trying again.", 'error')
             return redirect(url_for('submit'))
 
-        user_agent = request.headers.get('User-Agent')  # Get the user's browser info
+        user_agent = (request.headers.get('User-Agent') or '')[:255]  # Truncate to column width
 
         # Determine initial status based on config
         auto_approve = config.get('quotes.auto_approve', False)
         initial_status = 1 if auto_approve else 0  # 1 = approved, 0 = pending
 
-        new_quote = Quote(
-            text=quote_text, 
-            ip_address=ip_address, 
-            user_agent=user_agent,
-            status=initial_status,
-            submitted_at=datetime.datetime.utcnow()  # Set submission timestamp for new quotes
-        )
+        def commit_quote():
+            quote = Quote(
+                text=quote_text, 
+                ip_address=ip_address, 
+                user_agent=user_agent,
+                status=initial_status,
+                submitted_at=datetime.datetime.now(datetime.timezone.utc)  # Set submission timestamp for new quotes
+            )
+            db.session.add(quote)
+            db.session.commit()
+            return quote
 
         try:
-            db.session.add(new_quote)
-            db.session.commit()
+            new_quote = db_retry_operation(commit_quote)
             
             # Log the quote creation for debugging
             logging.debug(f"Quote created: ID={new_quote.id}, Status={new_quote.status}, Text='{quote_text[:50]}...'")
@@ -374,7 +349,7 @@ def submit():
 
     return render_template('submit.html', approved_count=approved_count, pending_count=pending_count)
 
-@app.route('/vote/<int:id>/<action>')
+@app.route('/vote/<int:id>/<action>', methods=['POST'])
 def vote(id, action):
     # Validate action parameter upfront
     if action not in ('upvote', 'downvote'):
@@ -532,7 +507,7 @@ def faq():
     return render_template('faq.html', approved_count=approved_count, pending_count=pending_count)
 
 # Flag/Report a quote route
-@app.route('/flag/<int:id>')
+@app.route('/flag/<int:id>', methods=['POST'])
 def flag_quote(id):
     # Only allow flagging of approved quotes (status = 1)
     quote = Quote.query.filter_by(id=id, status=1).first()
@@ -547,8 +522,21 @@ def flag_quote(id):
         else:
             flash(message, 'error')
             return redirect(url_for('browse'))
-    
-    # Increment flag count
+
+    # Deduplicate flags by IP — one flag per IP per quote
+    client_ip = validate_ip_address(request.remote_addr)
+    existing_flag = Vote.query.filter_by(quote_id=id, ip_address=client_ip, vote_type='flag').first()
+    if existing_flag:
+        message = 'You have already flagged this quote.'
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return jsonify({'success': False, 'message': message}), 409
+        else:
+            flash(message, 'info')
+            return redirect(url_for('browse'))
+
+    # Record the flag and increment count
+    flag_record = Vote(quote_id=id, ip_address=client_ip, vote_type='flag')
+    db.session.add(flag_record)
     quote.flag_count += 1
     
     def commit_flag_changes():
@@ -594,9 +582,30 @@ def flag_quote(id):
         return redirect(url_for('browse'))
 
 # Admin login route
+def _is_login_rate_limited(ip: str) -> bool:
+    """Return True if this IP has exceeded the login attempt threshold."""
+    now = time.time()
+    window = [t for t in _login_attempts[ip] if now - t < LOGIN_WINDOW_SECONDS]
+    _login_attempts[ip] = window
+    return len(window) >= LOGIN_MAX_ATTEMPTS
+
+
+def _record_login_attempt(ip: str) -> None:
+    _login_attempts[ip].append(time.time())
+
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
+        client_ip = validate_ip_address(request.remote_addr)
+
+        # Rate-limit login attempts per IP
+        if _is_login_rate_limited(client_ip):
+            flash('Too many login attempts. Please wait a few minutes and try again.', 'danger')
+            approved_count = Quote.query.filter_by(status=1).count()
+            pending_count = Quote.query.filter_by(status=0).count()
+            return render_template('login.html', approved_count=approved_count, pending_count=pending_count), 429
+
         try:
             username = request.form.get('username', '').strip()
             password = request.form.get('password', '')
@@ -610,7 +619,10 @@ def login():
             # Check if the username is correct and verify the password using Argon2
             # Supports multiple admins defined in config.json
             admin_user = next((admin for admin in config.admins if admin['username'] == username), None)
-            
+
+            # Use a generic failure message to prevent user enumeration
+            login_fail_msg = 'Invalid username or password. Please try again.'
+
             if admin_user:
                 try:
                     ph.verify(admin_user['password_hash'], password)  # Verify password using Argon2
@@ -622,15 +634,20 @@ def login():
                     session['admin'] = True
                     session['admin_username'] = username
                     
+                    # Clear rate-limit history on successful login
+                    _login_attempts.pop(client_ip, None)
+
                     flash(f'Welcome back, {username}! You are now logged in as administrator.', 'success')
                     return redirect(url_for('modapp'))
                 except VerifyMismatchError:
-                    flash('The password you entered is incorrect. Please check your password and try again.', 'danger')
+                    _record_login_attempt(client_ip)
+                    flash(login_fail_msg, 'danger')
                 except Exception as e:
                     logging.error(f"Password verification error: {e}")
                     flash('An error occurred during login. Please try again.', 'danger')
             else:
-                flash('The username you entered is not recognized. Please check your username and try again.', 'danger')
+                _record_login_attempt(client_ip)
+                flash(login_fail_msg, 'danger')
                 
         except Exception as e:
             logging.error(f"Login error: {e}")
@@ -970,7 +987,7 @@ def top_quotes():
 
 
 # Approve a quote (admin only)
-@app.route('/approve/<int:id>')
+@app.route('/approve/<int:id>', methods=['POST'])
 def approve(id):
     if not session.get('admin'):
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
@@ -1010,7 +1027,7 @@ def approve(id):
     return redirect(url_for('modapp', filter=filter_status))
 
 # Reject a quote (admin only)
-@app.route('/reject/<int:id>')
+@app.route('/reject/<int:id>', methods=['POST'])
 def reject(id):
     if not session.get('admin'):
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
@@ -1051,7 +1068,7 @@ def reject(id):
 
 
 # Delete a quote (admin only)
-@app.route('/delete/<int:id>')
+@app.route('/delete/<int:id>', methods=['POST'])
 def delete(id):
     if not session.get('admin'):
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
@@ -1098,7 +1115,7 @@ def delete(id):
     return redirect(url_for('modapp', filter=filter_status))
 
 # Clear flags from a quote (admin only)
-@app.route('/clear_flags/<int:id>')
+@app.route('/clear_flags/<int:id>', methods=['POST'])
 def clear_flags(id):
     if not session.get('admin'):
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
@@ -1266,44 +1283,29 @@ def logout():
     flash('Logged out successfully.', 'success')
     return redirect(url_for('login'))
 
-# Debug route for IP detection (admin only)
-@app.route('/debug/ip')
-def debug_ip():
-    if not session.get('admin'):
-        abort(403)
-    
-    ip_info = {
-        'detected_ip': request.remote_addr,
-        'headers': {
-            'User-Agent': request.headers.get('User-Agent'),
-            'Remote-Addr': request.remote_addr,
-        }
-    }
-    return jsonify(ip_info)
-
 # Automatically create the database tables using app context
 with app.app_context():
     db.create_all()
     
     # Add flag_count column if it doesn't exist (for existing databases)
     try:
-        # Try to access flag_count on a quote to test if column exists
-        test_query = db.session.execute(db.text("SELECT flag_count FROM quote LIMIT 1"))
+        db.session.execute(db.text("SELECT flag_count FROM quote LIMIT 1"))
     except Exception as e:
-        if "no such column" in str(e).lower():
-            # Add the missing column using raw SQL
+        db.session.rollback()
+        err = str(e).lower()
+        if "does not exist" in err or "no such column" in err:
             db.session.execute(db.text("ALTER TABLE quote ADD COLUMN flag_count INTEGER DEFAULT 0"))
             db.session.commit()
             logging.info("Added flag_count column to existing database")
     
     # Add submitted_at column if it doesn't exist (for existing databases)
     try:
-        # Try to access submitted_at on a quote to test if column exists
-        test_query = db.session.execute(db.text("SELECT submitted_at FROM quote LIMIT 1"))
+        db.session.execute(db.text("SELECT submitted_at FROM quote LIMIT 1"))
     except Exception as e:
-        if "no such column" in str(e).lower():
-            # Add the missing column using raw SQL
-            db.session.execute(db.text("ALTER TABLE quote ADD COLUMN submitted_at DATETIME"))
+        db.session.rollback()
+        err = str(e).lower()
+        if "does not exist" in err or "no such column" in err:
+            db.session.execute(db.text("ALTER TABLE quote ADD COLUMN submitted_at TIMESTAMP"))
             db.session.commit()
             logging.info("Added submitted_at column to existing database")
 
