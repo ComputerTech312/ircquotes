@@ -37,3 +37,6 @@ __pycache__/
 bash.org/
 bash.org.txt.tar.gz
 
+# PID files
+*.pid
+

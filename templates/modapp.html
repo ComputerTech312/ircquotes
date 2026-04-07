@@ -191,30 +191,33 @@
                         </td>
                         <td class="mobile-hide">{{ quote.ip_address|e }}</td>
                         <td class="mobile-hide">{{ quote.user_agent|e|truncate(50) }}</td>
-                        <td>
+                        <td style="white-space: nowrap;">
+                            {% macro action_btn(url, label, color=None) %}
+                            <form method="POST" action="{{ url }}" style="display:inline;">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <a href="{{ url }}" {% if color %}style="color: {{ color }};"{% endif %}>{{ label }}</a>
+                            </form>
+                            {% endmacro %}
                             {% if filter_status == 'flagged' %}
                             <!-- Special actions for flagged quotes -->
                             {% if quote.status == 1 %}
-                            <!-- Already approved but flagged -->
-                            <a href="/clear_flags/{{ quote.id }}" style="color: blue;">Clear Flags</a> |
-                            <a href="/reject/{{ quote.id }}" style="color: orange;">Reject</a> |
-                            <a href="/delete/{{ quote.id }}" style="color: red;">Delete</a>
+                            {{ action_btn('/clear_flags/' ~ quote.id, 'Clear Flags', 'blue') }} |
+                            {{ action_btn('/reject/' ~ quote.id, 'Reject', 'orange') }} |
+                            {{ action_btn('/delete/' ~ quote.id, 'Delete', 'red') }}
                             {% elif quote.status == 0 %}
-                            <!-- Pending and flagged -->
-                            <a href="/approve/{{ quote.id }}" style="color: green;">Approve</a> |
-                            <a href="/clear_flags/{{ quote.id }}" style="color: blue;">Clear Flags</a> |
-                            <a href="/reject/{{ quote.id }}" style="color: orange;">Reject</a> |
-                            <a href="/delete/{{ quote.id }}" style="color: red;">Delete</a>
+                            {{ action_btn('/approve/' ~ quote.id, 'Approve', 'green') }} |
+                            {{ action_btn('/clear_flags/' ~ quote.id, 'Clear Flags', 'blue') }} |
+                            {{ action_btn('/reject/' ~ quote.id, 'Reject', 'orange') }} |
+                            {{ action_btn('/delete/' ~ quote.id, 'Delete', 'red') }}
                             {% else %}
-                            <!-- Rejected and flagged -->
-                            <a href="/clear_flags/{{ quote.id }}" style="color: blue;">Clear Flags</a> |
-                            <a href="/delete/{{ quote.id }}" style="color: red;">Delete</a>
+                            {{ action_btn('/clear_flags/' ~ quote.id, 'Clear Flags', 'blue') }} |
+                            {{ action_btn('/delete/' ~ quote.id, 'Delete', 'red') }}
                             {% endif %}
                             {% else %}
                             <!-- Standard actions for non-flagged quotes -->
-                            <a href="/approve/{{ quote.id }}">Approve</a> |
-                            <a href="/reject/{{ quote.id }}">Reject</a> |
-                            <a href="/delete/{{ quote.id }}">Delete</a>
+                            {{ action_btn('/approve/' ~ quote.id, 'Approve') }} |
+                            {{ action_btn('/reject/' ~ quote.id, 'Reject') }} |
+                            {{ action_btn('/delete/' ~ quote.id, 'Delete') }}
                             {% endif %}
                         </td>
                     </tr>

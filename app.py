@@ -372,9 +372,9 @@ def vote(id, action):
             flash(error_msg, 'error')
             return redirect(url_for('browse'))
 
-    # Retrieve vote history from database using IP
+    # Retrieve vote history from database using IP (exclude flag records)
     client_ip = validate_ip_address(request.remote_addr)
-    existing_vote = Vote.query.filter_by(quote_id=id, ip_address=client_ip).first()
+    existing_vote = Vote.query.filter_by(quote_id=id, ip_address=client_ip).filter(Vote.vote_type.in_(['upvote', 'downvote'])).first()
 
     message = ""
     
@@ -425,8 +425,8 @@ def vote(id, action):
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             # Return JSON response for AJAX
             current_vote_type = None
-            # Re-query to get current state after operation
-            updated_vote = Vote.query.filter_by(quote_id=id, ip_address=client_ip).first()
+            # Re-query to get current state after operation (exclude flag records)
+            updated_vote = Vote.query.filter_by(quote_id=id, ip_address=client_ip).filter(Vote.vote_type.in_(['upvote', 'downvote'])).first()
             if updated_vote:
                 current_vote_type = updated_vote.vote_type
                 
@@ -757,6 +757,7 @@ def modapp_bulk():
                                 quote.status = 2
                                 success_count += 1
                         elif action == 'delete':
+                            Vote.query.filter_by(quote_id=quote_id).delete()
                             db.session.delete(quote)
                             success_count += 1
                         elif action == 'clear_flags':
@@ -876,6 +877,8 @@ def delete_quote(quote_id):
         quote = db.session.get(Quote, quote_id)
         if quote:
             def commit_operation():
+                # Delete associated votes/flags first to avoid FK violation
+                Vote.query.filter_by(quote_id=quote_id).delete()
                 db.session.delete(quote)
                 db.session.commit()
                 return True
@@ -897,6 +900,8 @@ def clear_flags_quote(quote_id):
             quote.flag_count = 0
             
             def commit_operation():
+                # Also remove flag records from Vote table so users can re-flag
+                Vote.query.filter_by(quote_id=quote_id, vote_type='flag').delete()
                 db.session.commit()
                 return True
                 
